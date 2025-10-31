@@ -52,6 +52,24 @@
         radial-gradient(1.3px 1.3px at 15% 60%, rgba(255,255,255,.4) 50%, rgba(255,255,255,0) 52%);
       opacity:.5; filter: blur(.2px);
     }
+
+    /* --- NUEVO BLOQUE PARA EL TEXTO SECUNDARIO --- */
+    .subtitle{
+      position:fixed;
+      left:50%;
+      top:calc(50% + 80px); /* debajo del título principal */
+      transform:translateX(-50%);
+      font-weight:500;
+      font-size:clamp(16px, 2vw + 0.5rem, 28px);
+      color:#cde8ff;
+      text-shadow:
+        0 0 4px rgba(255,255,255,.7),
+        0 0 12px rgba(159,214,255,.4);
+      opacity:0;
+      transition:opacity 2s ease;
+    }
+    .subtitle.show{opacity:1;}
+    /* --- FIN DEL BLOQUE NUEVO --- */
   </style>
 </head>
 <body>
@@ -59,6 +77,11 @@
   <div class="stars"></div>
   <div class="vignette"></div>
   <h1 class="title">un maravilloso sentimiento ❤</h1>
+
+  <!-- NUEVO TEXTO -->
+  <h2 class="subtitle" style="opacity:0;">Que me lleva al infinito</h2>
+  <!-- FIN DEL NUEVO TEXTO -->
+
 <script>
 (() => {
   const canvas = document.getElementById('scene');
@@ -139,6 +162,13 @@
     requestAnimationFrame(loop);
   }
   requestAnimationFrame(loop);
+
+  /* --- NUEVO SCRIPT PARA MOSTRAR EL TEXTO SECUNDARIO --- */
+  setTimeout(()=>{
+    document.querySelector('.subtitle').classList.add('show');
+  },3000);
+  /* --- FIN DEL SCRIPT NUEVO --- */
+
 })();
 </script>
 </body>
