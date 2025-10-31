@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Tierra–Luna 3D — brillo azul + texto blanco</title>
+  <style>
+    html, body { height: 100%; margin: 0; overflow: hidden; background: #000; }
+    #app { position: fixed; inset: 0; z-index: 1; }
+    .hud { position: fixed; left: 12px; bottom: 12px; color: #c9d4ff; font: 12px/1.2 system-ui; opacity: .85; letter-spacing: .2px; z-index: 2; }
+
+    /* ===== Texto neón blanco ===== */
+    .neon-wrap{
+      position: fixed;
+      inset: 20px 16px auto 16px;
+      display: grid;
+      place-items: center;
+      width: calc(100% - 32px);
+      pointer-events: none;
+      z-index: 3;
+    }
+    .neon{
+      font-family: ui-rounded, system-ui, -apple-system, Segoe UI, Roboto, "Helvetica Neue", Arial, "Noto Sans", "Apple Color Emoji", "Segoe UI Emoji";
+      font-weight: 700;
+      text-align: center;
+      color: #fff;
+      letter-spacing: .4px;
+      font-size: clamp(16px, 2.2vw + 10px, 34px);
+      line-height: 1.1;
+      text-shadow:
+        0 0 1px #fff,
+        0 0 4px #b8e0ff,
+        0 0 10px #7ccaff,
+        0 0 20px #5dbbff,
+        0 0 35px #45b0ff;
+      filter: drop-shadow(0 0 8px rgba(120, 200, 255, .7));
+      animation: neonFlicker 5s infinite ease-in-out;
+    }
+    @keyframes neonFlicker{
+      0%, 100% { opacity: 1; }
+      6%  { opacity: .95; }
+      7.5%{ opacity: .9; }
+      9%  { opacity: 1; }
+      60% { opacity: .97; }
+      61% { opacity: .9; }
+      62% { opacity: 1; }
+    }
+  </style>
+  <script src="https://unpkg.com/three@0.160.0/build/three.min.js"></script>
+</head>
+<body>
+  <!-- Texto neón blanco -->
+  <div class="neon-wrap">
+    <div class="neon">Me atrae a ella como la fuerza que ejerce la tierra 🌎</div>
+  </div>
+
+  <div id="app"></div>
+  <div class="hud">Vista lateral 75°. Arrastra para mirar, rueda para acercar/alejar.</div>
+
+  <script>
+    // ===== Fondo de estrellas =====
+    (function makeStarCSSBackground(){
+      const W=3000,H=2000,c=document.createElement('canvas');c.width=W;c.height=H;
+      const ctx=c.getContext('2d');ctx.fillStyle='#000';ctx.fillRect(0,0,W,H);
+      function dot(x,y,r,rgba){ctx.beginPath();ctx.fillStyle=rgba;ctx.arc(x,y,r,0,Math.PI*2);ctx.fill();}
+      const white=11000,blue=800,orange=700;
+      for(let i=0;i<white;i++){const r=Math.random()*1.4+0.6;const a=0.75+Math.random()*0.25;dot(Math.random()*W,Math.random()*H,r,`rgba(255,255,255,${a})`);}    
+      for(let i=0;i<blue;i++){const r=Math.random()*1.8+0.9;const a=0.75+Math.random()*0.25;dot(Math.random()*W,Math.random()*H,r,`rgba(158,201,255,${a})`);}     
+      for(let i=0;i<orange;i++){const r=Math.random()*1.8+0.9;const a=0.75+Math.random()*0.25;dot(Math.random()*W,Math.random()*H,r,`rgba(255,197,106,${a})`);}    
+      document.body.style.backgroundImage=`url(${c.toDataURL('image/png')})`;
+      document.body.style.backgroundSize='cover';
+      document.body.style.backgroundPosition='center';
+    })();
+
+    // ===== Escena 3D =====
+    const scene=new THREE.Scene();
+    const renderer=new THREE.WebGLRenderer({antialias:true,alpha:true});
+    renderer.setSize(window.innerWidth,window.innerHeight);
+    renderer.setClearColor(0x000000,0);
+    document.getElementById('app').appendChild(renderer.domElement);
+
+    const camera=new THREE.PerspectiveCamera(60,window.innerWidth/window.innerHeight,0.1,4000);
+    const deg=THREE.MathUtils.degToRad;
+    const spherical=new THREE.Spherical(150,deg(75),deg(20));
+    camera.position.setFromSpherical(spherical);
+    camera.lookAt(0,0,0);
+
+    // Luces
+    scene.add(new THREE.AmbientLight(0x3a4b7a,1));
+    const sun=new THREE.DirectionalLight(0x99ccff,1.5); // luz azulada suave
+    sun.position.set(400,200,100);
+    scene.add(sun);
+
+    // Tierra y Luna
+    const loader=new THREE.TextureLoader();
+    const earthTexURL='https://i.ibb.co/FLj7Rk9w/earthmap1k-1.jpg';
+    const moonTexURL='https://i.ibb.co/pvDZCf64/moonmap1k-1.jpg';
+
+    const earthMaterial = new THREE.MeshPhongMaterial({
+      map: loader.load(earthTexURL),
+      emissive: 0x2266ff, // brillo azul
+      emissiveIntensity: 0.15
+    });
+    const earth=new THREE.Mesh(new THREE.SphereGeometry(12.5,64,64), earthMaterial);
+    scene.add(earth);
+
+    const atmosphere=new THREE.Mesh(
+      new THREE.SphereGeometry(12.35,64,64),
+      new THREE.MeshBasicMaterial({color:0x66b2ff,transparent:true,opacity:0.08})
+    );
+    scene.add(atmosphere);
+
+    // Halo delgado
+    const glowV=`varying float vIntensity;void main(){vec3 n=normalize(normalMatrix*normal);vec3 v=normalize((modelViewMatrix*vec4(position,1.0)).xyz);float i=pow(1.0-max(dot(n,-v),0.0),4.0);vIntensity=i;gl_Position=projectionMatrix*modelViewMatrix*vec4(position,1.0);}`;
+    const glowF=`varying float vIntensity;void main(){vec3 glow=vec3(0.22,0.55,1.0)*vIntensity;gl_FragColor=vec4(glow,vIntensity*0.5);}`;
+    const glowMat=new THREE.ShaderMaterial({vertexShader:glowV,fragmentShader:glowF,side:THREE.BackSide,blending:THREE.AdditiveBlending,transparent:true,depthWrite:false});
+    const glow=new THREE.Mesh(new THREE.SphereGeometry(12.7,64,64),glowMat);
+    scene.add(glow);
+
+    const moon=new THREE.Mesh(
+      new THREE.SphereGeometry(3.0,48,48),
+      new THREE.MeshPhongMaterial({map:loader.load(moonTexURL)})
+    );
+    const moonOrbit=new THREE.Object3D();scene.add(moonOrbit);moonOrbit.add(moon);
+    const ORBIT_RADIUS=34;
+    moon.position.set(ORBIT_RADIUS,0,0);
+    moonOrbit.rotation.z=deg(5);
+
+    // Animación
+    const clock=new THREE.Clock();
+    function animate(){
+      const t=clock.getElapsedTime();
+      earth.rotation.y=t*0.15;
+      atmosphere.rotation.y=earth.rotation.y*1.02;
+      moon.rotation.y=t*0.35;
+      moonOrbit.rotation.y=t*((2*Math.PI)/20);
+      renderer.render(scene,camera);
+      requestAnimationFrame(animate);
+    }
+    animate();
+
+    window.addEventListener('resize',()=>{
+      camera.aspect=window.innerWidth/window.innerHeight;
+      camera.updateProjectionMatrix();
+      renderer.setSize(window.innerWidth,window.innerHeight);
+    });
+  </script>
+</body>
+</html>

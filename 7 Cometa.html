@@ -1,0 +1,311 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Corazones rumbo a la Tierra</title>
+<style>
+  :root{
+    --sky-1:#070c1f;
+    --sky-2:#0b1430;
+    --neon:#ffffff;
+    --heart-core:#ff2e7a;
+    --heart-edge:#a10b4d;
+    --heart-glow:#ff79b0;
+  }
+  *{box-sizing:border-box}
+  html,body{height:100%;margin:0}
+  body{
+    background:
+      radial-gradient(120vmax 120vmax at 50% 120%, var(--sky-2) 0 55%, transparent 55%),
+      linear-gradient(#090f24, #060a18 70%);
+    overflow:hidden;
+    color:#fff;
+    font-family: system-ui, -apple-system, Segoe UI, Roboto, "Helvetica Neue", Arial, "Noto Sans", "Apple Color Emoji","Segoe UI Emoji", "Segoe UI Symbol";
+  }
+
+  /* Cielo estrellado */
+  #stars{
+    position:fixed; inset:0; width:100%; height:100%;
+    display:block; z-index:0;
+  }
+
+  /* Tierra con continentes */
+  .earth{
+    position:fixed;
+    left:-44vmin;
+    bottom:-44vmin;
+    width:88vmin; height:88vmin;
+    border-radius:50%;
+    background:
+      radial-gradient(circle at 55% 45%, rgba(255,255,255,.1) 0 26%, transparent 46%) ,
+      radial-gradient(circle at 70% 80%, rgba(255,255,255,.07), transparent 60%) ,
+      radial-gradient(circle at 50% 50%, #0e7ed6 0, #0961b3 55%, #044183 78%, #02224a 100%);
+    box-shadow:
+      0 0 60px 18px rgba(65,164,255,0.28) inset,
+      0 0 90px 18px rgba(65,164,255,0.25);
+    z-index:2;
+    pointer-events:none;
+    overflow:hidden; /* para recortar el mapa */
+  }
+  .earth::after{
+    content:"";
+    position:absolute; inset:-2.5vmin;
+    border-radius:50%;
+    background:radial-gradient(circle at 60% 40%, rgba(98,197,255,0.28), transparent 60%);
+    filter: blur(6px);
+    pointer-events:none;
+  }
+  /* Mapa estilizado dentro del planeta */
+  svg.earth-map{
+    position:absolute; inset:-8% -2% -6% -6%;
+    opacity:.95;
+    filter: drop-shadow(0 0 2px rgba(0,0,0,.25));
+  }
+
+  /* Texto en neón (blanco) */
+  .neon{
+    position:fixed; left:50%; top:6vh; transform:translateX(-50%);
+    text-align:center;
+    font-weight:800;
+    z-index:3;
+    padding:0 1rem;
+  }
+  .neon span{
+    font-size: clamp(22px, 3.2vw, 44px);
+    color: var(--neon);
+    text-shadow:
+      0 0 6px rgba(255,255,255,.85),
+      0 0 18px rgba(160,210,255,.35),
+      0 0 32px rgba(160,210,255,.25);
+    letter-spacing:.25px;
+    animation: neonPulse 3s ease-in-out infinite;
+  }
+  @keyframes neonPulse{
+    0%,100%{ opacity:.96; filter: drop-shadow(0 0 2px rgba(255,255,255,.6)); }
+    50%{ opacity:1; filter: drop-shadow(0 0 8px rgba(255,255,255,.9)); }
+  }
+
+  /* Campo rotado: así la caída vertical se ve diagonal hacia la Tierra */
+  .field{
+    position:fixed; inset:-25vh -25vw;
+    transform: rotate(25deg);
+    transform-origin:center;
+    z-index:1;
+    pointer-events:none;
+  }
+
+  /* Cada “cometa-corazón” (envoltorio animado) */
+  .heart-wrap{
+    position:absolute;
+    width:1px; height:1px; /* el contenido define el tamaño visual */
+    animation: fall var(--dur) linear forwards;
+    will-change: transform, opacity;
+  }
+
+  /* Estela (tapered) detrás del corazón */
+  .trail{
+    position:absolute;
+    left:0; top:0;
+    transform: translate(-50%,-100%); /* que nazca por encima del corazón */
+    width:3px; height: var(--trail);
+    background: linear-gradient(to top,
+      rgba(255,185,213,0) 0%,
+      rgba(255,185,213,.25) 30%,
+      rgba(255,185,213,.55) 70%,
+      rgba(255,185,213,.85) 100%);
+    border-radius: 2px;
+    filter: blur(.3px);
+    /* Afilar la cola con máscara */
+    -webkit-mask-image: linear-gradient(to top, transparent 0%, black 35%, black 100%);
+            mask-image: linear-gradient(to top, transparent 0%, black 35%, black 100%);
+    box-shadow: 0 -6px 16px rgba(255,121,176,.55), 0 -14px 28px rgba(255,121,176,.35);
+  }
+
+  /* Corazón en SVG, reorientado para que no rote con el campo */
+  .heart{
+    position:absolute;
+    transform: translate(-50%,-50%) rotate(-25deg); /* contrarresta la rotación del .field */
+    filter:
+      drop-shadow(0 1px 0 rgba(0,0,0,.2))
+      drop-shadow(0 0 8px rgba(255,121,176,.6));
+  }
+  .heart svg{
+    display:block;
+  }
+
+  @keyframes fall{
+    0%{ transform: translateY(-120vh); opacity: 0; }
+    8%{ opacity: .98; }
+    100%{ transform: translateY(135vh); opacity: 0; }
+  }
+</style>
+</head>
+<body>
+  <canvas id="stars" aria-hidden="true"></canvas>
+
+  <!-- Tierra con continentes -->
+  <div class="earth" aria-hidden="true">
+    <!-- Mapa simple estilizado (lat/long aproximados para estilo) -->
+    <svg class="earth-map" viewBox="0 0 1000 500" preserveAspectRatio="xMidYMid slice">
+      <g fill="#44c073">
+        <!-- América -->
+        <path d="M210,110c28,4,40,18,40,36s-22,34-22,50c0,20,26,30,14,48c-14,22-46,8-76,18c-24,8-26,28-42,36c-14,8-36,2-40-12
+                 c-8-26,28-40,34-60c8-26-24-40-8-66c14-22,42-16,58-30C184,116,196,108,210,110z"/>
+        <path d="M330,180c24,4,44,18,46,30c4,18-14,26-22,42c-10,22,18,38,2,50c-16,10-28-8-46-2c-18,6-24,28-40,26
+                 c-20-2-20-26-8-40c14-16,42-20,46-38C312,218,296,186,330,180z"/>
+        <!-- Europa/África/Eurasia -->
+        <path d="M540,120c40-6,80,10,98,30c12,12,6,28-8,34c-20,10-60,0-76,18c-12,12-2,34-14,44c-16,14-44,2-64,8
+                 c-16,6-20,26-34,34c-18,10-46,0-50-18c-6-28,40-40,60-58c18-16,12-36,34-52C506,132,520,124,540,120z"/>
+        <path d="M640,274c16-6,28,2,40,12c16,14,36,28,36,46c0,18-20,32-40,30c-24-2-30-24-44-40C616,304,618,282,640,274z"/>
+        <!-- Asia Este -->
+        <path d="M760,160c32,2,52,18,64,34c12,16,10,30-8,40c-18,10-44,2-60,10c-16,8-16,28-30,36c-16,10-40,2-44-14
+                 c-6-22,18-32,30-48C728,194,732,160,760,160z"/>
+        <!-- Oceanía -->
+        <path d="M840,360c10-6,24,0,32,8c10,10,14,22,8,30c-8,10-26,12-36,6C836,398,828,372,840,360z"/>
+      </g>
+      <!-- hielos/relieves tenues -->
+      <g fill="#b8f1ff" opacity=".25">
+        <ellipse cx="220" cy="100" rx="20" ry="10"/>
+        <ellipse cx="700" cy="100" rx="26" ry="12"/>
+      </g>
+    </svg>
+  </div>
+
+  <!-- Texto -->
+  <div class="neon" role="heading" aria-level="1">
+    <span>Mi corazón llegó del cielo a la tierra con una vertiginoso movimiento 💘</span>
+  </div>
+
+  <!-- Campo de caída -->
+  <div class="field" id="field" aria-hidden="true"></div>
+
+<script>
+  /* ===== Estrellas en canvas ===== */
+  (function drawStars(){
+    const c = document.getElementById('stars');
+    const ctx = c.getContext('2d', { alpha: false });
+    function resize(){
+      c.width = innerWidth; c.height = innerHeight;
+      paint();
+    }
+    function dot(x,y,r,col,a=1){
+      ctx.globalAlpha = a; ctx.fillStyle = col;
+      ctx.beginPath(); ctx.arc(x,y,r,0,Math.PI*2); ctx.fill();
+    }
+    function paint(){
+      const { width:w, height:h } = c;
+      const grd = ctx.createLinearGradient(0,0,0,h);
+      grd.addColorStop(0, "#0a1330");
+      grd.addColorStop(1, "#070c1f");
+      ctx.fillStyle = grd; ctx.fillRect(0,0,w,h);
+
+      const area = w*h;
+      const count = Math.min(1200, Math.floor(area/2200));
+      for(let i=0;i<count;i++){
+        const x = Math.random()*w;
+        const y = Math.random()*h;
+        const r = Math.random()*1.3 + 0.15;
+        const t = Math.random()*0.5 + 0.55;
+        dot(x,y,r, i%13===0?"#cfe8ff":(i%7===0?"#a6c8ff":"#ffffff"), t);
+      }
+      ctx.globalAlpha = 1;
+    }
+    addEventListener('resize', resize, { passive:true });
+    resize();
+  })();
+
+  /* ===== Corazones-cometa ===== */
+  const field = document.getElementById('field');
+
+  function makeHeartNode(sizePx){
+    // contenedor del corazón + contrarrotación
+    const heart = document.createElement('div');
+    heart.className = 'heart';
+    heart.style.width = sizePx + 'px';
+    heart.style.height = sizePx + 'px';
+
+    // SVG corazón (bien definido)
+    const svgNS = 'http://www.w3.org/2000/svg';
+    const svg = document.createElementNS(svgNS, 'svg');
+    svg.setAttribute('viewBox','0 0 32 29');
+    svg.setAttribute('width', sizePx);
+    svg.setAttribute('height', sizePx);
+
+    const defs = document.createElementNS(svgNS,'defs');
+    const grad = document.createElementNS(svgNS,'linearGradient');
+    grad.setAttribute('id','g'+Math.random().toString(36).slice(2));
+    grad.setAttribute('x1','0%'); grad.setAttribute('y1','0%');
+    grad.setAttribute('x2','0%'); grad.setAttribute('y2','100%');
+    const s1 = document.createElementNS(svgNS,'stop'); s1.setAttribute('offset','0%'); s1.setAttribute('stop-color','#ff8fbf');
+    const s2 = document.createElementNS(svgNS,'stop'); s2.setAttribute('offset','55%'); s2.setAttribute('stop-color',getComputedStyle(document.documentElement).getPropertyValue('--heart-core')||'#ff2e7a');
+    const s3 = document.createElementNS(svgNS,'stop'); s3.setAttribute('offset','100%'); s3.setAttribute('stop-color',getComputedStyle(document.documentElement).getPropertyValue('--heart-edge')||'#a10b4d');
+    grad.appendChild(s1); grad.appendChild(s2); grad.appendChild(s3);
+    defs.appendChild(grad);
+    svg.appendChild(defs);
+
+    const path = document.createElementNS(svgNS,'path');
+    // Path clásico de corazón 32x29
+    path.setAttribute('d','M23.6,0c-3,0-5.6,1.8-7.6,4.6C14,1.8,11.4,0,8.4,0C3.8,0,0,3.8,0,8.4C0,17.7,16,28.5,16,28.5S32,17.7,32,8.4 C32,3.8,28.2,0,23.6,0z');
+    path.setAttribute('fill', 'url(#'+grad.getAttribute('id')+')');
+    path.setAttribute('stroke','rgba(255,255,255,.35)');
+    path.setAttribute('stroke-width','0.3');
+
+    svg.appendChild(path);
+    heart.appendChild(svg);
+    return heart;
+  }
+
+  function spawnHeart(){
+    // control de población para rendimiento
+    if(field.children.length > 230){
+      const kill = Math.floor(field.children.length * 0.35);
+      for(let i=0;i<kill;i++) field.firstElementChild?.remove();
+    }
+
+    // posición horizontal (en coordenadas del field rotado)
+    const x = Math.random() * (innerWidth + innerWidth*0.5) - innerWidth*0.25;
+    const size = Math.random() < 0.25 ? (28 + Math.random()*10) : (18 + Math.random()*8);
+    const dur = (Math.random()*6 + 6).toFixed(2) + 's'; // 6–12s
+    const trailLen = Math.round(Math.random()*160 + 90) + 'px';
+
+    const wrap = document.createElement('div');
+    wrap.className = 'heart-wrap';
+    wrap.style.left = x + 'px';
+    wrap.style.top  = (-innerHeight*0.25) + 'px';
+    wrap.style.setProperty('--dur', dur);
+    wrap.style.setProperty('--trail', trailLen);
+
+    // ligera variación de “bamboleo” para naturalidad
+    const sway = (Math.random()*6-3); // grados
+    wrap.animate([
+      { transform: 'translateY(-120vh) rotate(0deg)' },
+      { transform: 'translateY(135vh) rotate('+sway+'deg)' }
+    ], { duration: parseFloat(dur)*1000, easing:'linear' });
+
+    const trail = document.createElement('i');
+    trail.className = 'trail';
+    trail.style.height = trailLen;
+
+    const heart = makeHeartNode(size);
+
+    // limpieza al final
+    wrap.addEventListener('animationend', () => wrap.remove());
+
+    wrap.appendChild(trail);
+    wrap.appendChild(heart);
+    field.appendChild(wrap);
+  }
+
+  // Arranque sin espera
+  for(let i=0;i<48;i++){
+    setTimeout(spawnHeart, Math.random()*900);
+  }
+  // Flujo constante
+  const rateMs = 150; // intenso pero estable
+  const spawner = setInterval(spawnHeart, rateMs);
+
+  addEventListener('resize', () => {}, { passive:true });
+</script>
+</body>
+</html>

@@ -1,0 +1,113 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Noche estrellada · Árbol grande ajustado · Texto neón · Manzana</title>
+  <style>
+    :root{
+      --bg:#060a13;
+      --sky:#0a1222;
+      --star:#d9e8ff;
+      --neon:#00f5ff;
+      --neon-soft: rgba(0,245,255,.15);
+      --grass-h: 120px;
+      --apple-size: 46px;
+      --drop: 0px;
+    }
+
+    *{box-sizing:border-box}
+    html,body{height:100%;margin:0}
+    body{
+      font-family: system-ui, sans-serif;
+      background: radial-gradient(1200px 800px at 60% -10%, #12213f 0%, var(--sky) 35%, var(--bg) 100%);
+      color:#e6f7ff; overflow:hidden;
+    }
+
+    .scene{position:relative;width:100%;height:100%;}
+
+    .stars{position:absolute;inset:0;overflow:hidden;z-index:0}
+    .star{position:absolute;width:2px;height:2px;background:var(--star);border-radius:50%;opacity:.8;filter:drop-shadow(0 0 4px #fff);} 
+    @keyframes twinkle{0%,100%{opacity:.2;transform:scale(.8)}50%{opacity:1;transform:scale(1.6)}}
+
+    .grass{position:absolute;left:0;right:0;bottom:0;height:var(--grass-h);z-index:3;
+      background:linear-gradient(180deg, #0f7a2d 0%, #0a5a1a 45%, #07320f 100%);
+      box-shadow:0 -20px 60px #000 inset;
+    }
+
+    .tree{position:absolute;left:2vw;bottom:calc(var(--grass-h) - 40px);width:min(62vw,850px);height:auto;z-index:2;}
+    .tree img{width:100%;height:auto;display:block;filter:drop-shadow(0 10px 14px #000a);}
+
+    .text-wrap{position:absolute;top:10vh;right:15vw;width:min(560px,60vw);z-index:4;text-align:right;}
+    .neon{font-weight:700;line-height:1.25;letter-spacing:.5px;text-shadow:0 0 6px var(--neon),0 0 14px var(--neon),0 0 30px var(--neon),0 0 60px var(--neon-soft);} 
+    .line1{font-size:clamp(22px,3.2vw,34px);color:#bffcff;}
+    .line2{font-size:clamp(20px,2.6vw,28px);color:#bffcff;margin-top:.5rem;opacity:0;transform:translateY(8px);filter:blur(2px);} 
+    .line2.show{animation:fadeInUp .9s ease-out forwards}
+    @keyframes fadeInUp{to{opacity:1;transform:none;filter:none}}
+
+    /* Manzana más a la derecha y un poco más abajo */
+    #apple{position:absolute;width:var(--apple-size);height:var(--apple-size);font-size:calc(var(--apple-size) - 4px);
+      line-height:var(--apple-size);text-align:center;filter:drop-shadow(0 6px 6px #0008);z-index:5;
+      left:73%;bottom:52%;transform:translateY(0);}
+
+    /* Animación de caída fluida sin pausa */
+    @keyframes drop{0%{transform:translateY(0)}100%{transform:translateY(var(--drop))}}
+    #apple.drop{animation:drop 6s cubic-bezier(.25,.75,.5,1) forwards}
+    #apple:not(.drop){animation:sway 3s ease-in-out infinite}
+    @keyframes sway{0%,100%{transform:translateY(0)rotate(-3deg)}50%{transform:translateY(2px)rotate(3deg)}}
+
+    .vignette{position:absolute;inset:-10vmax;pointer-events:none;z-index:10;background:radial-gradient(80% 80% at 50% 30%,transparent 40%,#0008 100%);} 
+  </style>
+</head>
+<body>
+  <div class="scene">
+    <div class="stars" id="stars"></div>
+
+    <div class="tree">
+      <img src="https://i.ibb.co/FLp3Fmpd/Pngtree-stereo-geometric-low-poly-green-6187879.png" alt="árbol low poly verde" />
+      <div id="apple">🍎</div>
+    </div>
+
+    <div class="text-wrap">
+      <div class="neon line1">De pronto caí a ella sin razón 😇.</div>
+      <div class="neon line2" id="line2">Tal y como lo hizo la manzana de Newton 🍎.</div>
+    </div>
+
+    <div class="grass"></div>
+    <div class="vignette"></div>
+  </div>
+
+  <script>
+    (function(){
+      const sky=document.getElementById('stars');
+      for(let i=0;i<140;i++){
+        const s=document.createElement('div');
+        s.className='star';
+        s.style.left=Math.random()*window.innerWidth+'px';
+        s.style.top=Math.random()*window.innerHeight*0.85+'px';
+        s.style.animation=`twinkle ${4+Math.random()*6}s ease-in-out ${Math.random()*6}s infinite`;
+        sky.appendChild(s);
+      }
+    })();
+
+    const line2=document.getElementById('line2');
+    const apple=document.getElementById('apple');
+    function computeDrop(){
+      const rect=apple.getBoundingClientRect();
+      const grassTop=window.innerHeight-parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--grass-h'));
+      const dropPx=Math.max(0,grassTop-rect.bottom+4);
+      document.documentElement.style.setProperty('--drop',dropPx+'px');
+    }
+    setTimeout(()=>{computeDrop();line2.classList.add('show');apple.classList.add('drop');},3000);
+
+    const ro=new ResizeObserver(()=>{ if(!apple.classList.contains('drop')) computeDrop(); });
+    ro.observe(document.body);
+
+    const mq=window.matchMedia('(prefers-reduced-motion: reduce)');
+    if(mq.matches){
+      document.querySelectorAll('.star').forEach(el=> el.style.animation='none');
+      apple.style.animation='none';
+    }
+  </script>
+</body>
+</html>

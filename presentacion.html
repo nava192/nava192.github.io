@@ -1,0 +1,270 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Presentación • 9 HTML</title>
+  <style>
+    :root{
+      --bg:#0b0b12; 
+      --fg:#e8e8f0; 
+      --muted:#9aa1ad; 
+      --accent:#7aa2ff; 
+      --transition: 900ms; /* duración del efecto de transición */
+    }
+    html,body{height:100%;}
+    body{margin:0;background:var(--bg);color:var(--fg);font-family:system-ui,-apple-system,Segoe UI,Roboto,Ubuntu,Inter,Arial;overflow:hidden}
+
+    /* Contenedor principal */
+    .stage{position:fixed;inset:0;display:grid;place-items:center;background:#000}
+
+    /* Dos capas para cruzar (crossfade/slide) entre iframes */
+    .layer{position:absolute;inset:0;display:block}
+    .layer iframe{position:absolute;inset:0;width:100%;height:100%;border:0;background:#000}
+
+    /* Estados base (visibilidad) */
+    .hidden{opacity:0;pointer-events:none}
+    .visible{opacity:1}
+    .layer{transition:opacity var(--transition) ease;}
+
+    /* Transiciones extra (slide y zoom) aplicadas al iframe entrante/saliente */
+    .anim-enter{animation-duration: var(--transition); animation-fill-mode: both;}
+    .anim-exit{ animation-duration: var(--transition); animation-fill-mode: both;}
+
+    @keyframes slideLeftIn{from{transform:translateX(12%)}to{transform:translateX(0)}}
+    @keyframes slideLeftOut{from{transform:translateX(0)}to{transform:translateX(-12%)}}
+
+    @keyframes slideUpIn{from{transform:translateY(12%)}to{transform:translateY(0)}}
+    @keyframes slideUpOut{from{transform:translateY(0)}to{transform:translateY(-12%)}}
+
+    @keyframes zoomIn{from{transform:scale(1.05)}to{transform:scale(1)}}
+    @keyframes zoomOut{from{transform:scale(1)}to{transform:scale(0.96)}}
+
+    /* UI */
+    .hud{position:fixed;left:0;right:0;bottom:0;display:flex;gap:.5rem;align-items:center;padding:.75rem 1rem;background:linear-gradient(to top, rgba(0,0,0,.55), transparent)}
+    .btn{appearance:none; border:1px solid #2b2f3a; background:#121420; color:var(--fg); padding:.55rem .8rem; border-radius:.7rem; cursor:pointer; font-weight:600}
+    .btn:hover{border-color:#3b4252}
+    .btn[aria-pressed="true"]{background:#1b1f2d;border-color:#4c566a}
+    .sep{flex:1}
+    .time{font-variant-numeric:tabular-nums; color:var(--muted); font-size:.9rem}
+
+    /* Barra de progreso */
+    .progress{position:fixed;left:0;right:0;bottom:0;height:3px;background:rgba(255,255,255,.15)}
+    .progress>i{display:block;height:100%;width:0;background:linear-gradient(90deg,var(--accent),#a6e3ff)}
+
+    /* Overlay inicial para habilitar audio/autoplay */
+    .gate{position:fixed;inset:0;display:grid;place-items:center;background:radial-gradient(1200px 800px at 50% 120%, #0a0f1c, #04060a); color:#cfd7ff}
+    .gate .card{max-width:680px;padding:1.25rem 1.5rem;border-radius:1rem;background:rgba(0,0,0,.35);backdrop-filter: blur(8px);border:1px solid rgba(255,255,255,.08);text-align:center}
+    .gate h1{margin:.2rem 0 0 0;font-size:1.25rem}
+    .gate p{margin:.35rem 0 1rem 0;color:#9fb2ff}
+    .gate .actions{display:flex;gap:.75rem;justify-content:center}
+    .gate .actions .btn{font-size:1rem}
+  </style>
+</head>
+<body>
+  <!-- AUDIO de fondo -->
+  <audio id="bgm" playsinline src="https://www.dropbox.com/scl/fi/qfv28rqu6b36jwusao4x4/Love.MP3?rlkey=ptjd053374f028aa4jfcfrfxn&st=1j0j51eo&raw=1" preload="auto" loop></audio>
+
+  <!-- Escenario con dos capas para transición entre iframes -->
+  <div class="stage" id="stage">
+    <div class="layer visible" id="layerA"><iframe id="frameA" referrerpolicy="no-referrer"></iframe></div>
+    <div class="layer hidden"  id="layerB"><iframe id="frameB" referrerpolicy="no-referrer"></iframe></div>
+  </div>
+
+  <!-- HUD de controles -->
+  <div class="hud">
+    <button class="btn" id="prev">⟵ Anterior</button>
+    <button class="btn" id="next">Siguiente ⟶</button>
+    <button class="btn" id="playPause" aria-pressed="true">Pausa</button>
+    <button class="btn" id="mute" aria-pressed="false">🔊</button>
+    <div class="sep"></div>
+    <div class="time"><span id="idx">1</span>/<span id="total">9</span> • <span id="remaining">–</span></div>
+  </div>
+  <div class="progress"><i id="bar"></i></div>
+
+  <!-- Overlay de inicio -->
+  <div class="gate" id="gate">
+    <div class="card">
+      <h1>Presentación lista</h1>
+      <p>Presiona <strong>Iniciar</strong> para activar el audio y comenzar el pase automático.</p>
+      <div class="actions">
+        <button class="btn" id="start">▶️ Iniciar</button>
+        <button class="btn" id="startMuted">▶️ Iniciar sin sonido</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // 1) Configura aquí tus 9 archivos, duración (ms) y el tipo de transición
+    const SLIDES = [
+      { src: "1 Esa Mujer.html", duration: 3000, transition: "fade" },
+      { src: "2 Flor.html", duration: 6000, transition: "slide-left" },
+      { src: "3 Petalos.html", duration: 6000, transition: "zoom" },
+      { src: "4 Tierra.html", duration: 4000, transition: "slide-up" },
+      { src: "5 Manzana.html", duration: 7000, transition: "fade" },
+      { src: "6 Latido.html", duration: 6000, transition: "slide-left" },
+      { src: "7 Cometa.html", duration: 7000, transition: "zoom" },
+      { src: "8 escena_maravilloso_sentimiento_v6.html", duration: 3000, transition: "slide-up" },
+      { src: "9 Universo.html", duration: 10000, transition: "fade" },
+    ];
+
+    // 2) Opciones
+    const LOOP = false;               // repetir al finalizar
+    const AUTOPLAY = true;            // auto-avance entre slides
+    const START_MUTED = false;        // ajusta si se elige "Iniciar sin sonido"
+    const INIT_AUTOSTART = false;     // 🔹 evita que comience sin preguntar
+
+    // Elementos
+    const layerA = document.getElementById('layerA');
+    const layerB = document.getElementById('layerB');
+    const frameA = document.getElementById('frameA');
+    const frameB = document.getElementById('frameB');
+    const bgm = document.getElementById('bgm');
+    const startBtn = document.getElementById('start');
+    const startMutedBtn = document.getElementById('startMuted');
+    const gate = document.getElementById('gate');
+    const btnPrev = document.getElementById('prev');
+    const btnNext = document.getElementById('next');
+    const btnPP  = document.getElementById('playPause');
+    const btnMute= document.getElementById('mute');
+    const idxEl  = document.getElementById('idx');
+    const totalEl= document.getElementById('total');
+    const remEl  = document.getElementById('remaining');
+    const barEl  = document.getElementById('bar');
+
+    totalEl.textContent = SLIDES.length;
+
+    let current = 0;
+    let playing = true;
+    let muted = false;
+    let timer = null;
+    let progressRAF = null;
+    let tStart = 0;
+
+    function setTransitionClasses(iframe, mode, type){
+      iframe.className = "";
+      const map = {
+        'slide-left': ['slideLeftIn','slideLeftOut'],
+        'slide-up':   ['slideUpIn','slideUpOut'],
+        'zoom':       ['zoomIn','zoomOut'],
+      };
+      if(type === 'fade' || !map[type]) return;
+      const [inName, outName] = map[type];
+      if(mode==='enter') iframe.style.animationName = inName;
+      if(mode==='exit')  iframe.style.animationName = outName;
+    }
+
+    function loadInto(layer, iframe, slide){
+      setTransitionClasses(iframe, 'enter', slide.transition);
+      iframe.src = slide.src;
+    }
+
+    function crossTo(nextIndex){
+      const currLayer = (layerA.classList.contains('visible')) ? layerA : layerB;
+      const nextLayer = (currLayer === layerA) ? layerB : layerA;
+      const currFrame = currLayer.querySelector('iframe');
+      const nextFrame = nextLayer.querySelector('iframe');
+
+      const nextSlide = SLIDES[nextIndex];
+      setTransitionClasses(currFrame, 'exit', SLIDES[current].transition);
+      loadInto(nextLayer, nextFrame, nextSlide);
+
+      nextLayer.classList.remove('hidden');
+      nextLayer.classList.add('visible');
+      currLayer.classList.remove('visible');
+      currLayer.classList.add('hidden');
+
+      current = nextIndex;
+      idxEl.textContent = (current+1);
+      restartProgress();
+    }
+
+    function restartProgress(){
+      if(timer) clearTimeout(timer);
+      if(progressRAF) cancelAnimationFrame(progressRAF);
+      barEl.style.width = '0px';
+      tStart = performance.now();
+
+      const dur = SLIDES[current].duration;
+      function tick(now){
+        const el = Math.min(1, (now - tStart)/dur);
+        barEl.style.width = (el*100)+'%';
+        const left = Math.max(0, Math.ceil((dur - (now - tStart))/1000));
+        remEl.textContent = left + ' s';
+        if(el < 1 && playing){
+          progressRAF = requestAnimationFrame(tick);
+        }
+      }
+      progressRAF = requestAnimationFrame(tick);
+
+      if(playing && AUTOPLAY){
+        timer = setTimeout(()=>{
+          goNext();
+        }, dur);
+      }
+    }
+
+    function goNext(){
+      const nextIndex = (current + 1 < SLIDES.length) ? current + 1 : (LOOP ? 0 : current);
+      if(nextIndex === current && !LOOP) return;
+      crossTo(nextIndex);
+    }
+    function goPrev(){
+      const prevIndex = (current - 1 >= 0) ? current - 1 : (LOOP ? SLIDES.length - 1 : 0);
+      crossTo(prevIndex);
+    }
+
+    btnNext.addEventListener('click', ()=>{ playing=false; btnPP.setAttribute('aria-pressed','false'); goNext(); });
+    btnPrev.addEventListener('click', ()=>{ playing=false; btnPP.setAttribute('aria-pressed','false'); goPrev(); });
+
+    btnPP.addEventListener('click', ()=>{
+      playing = !playing;
+      btnPP.textContent = playing ? 'Pausa' : 'Reanudar';
+      btnPP.setAttribute('aria-pressed', String(playing));
+      restartProgress();
+    });
+
+    btnMute.addEventListener('click', ()=>{
+      muted = !muted; bgm.muted = muted;
+      btnMute.textContent = muted ? '🔇' : '🔊';
+      btnMute.setAttribute('aria-pressed', String(muted));
+    });
+
+    window.addEventListener('keydown', (e)=>{
+      if(e.key==='ArrowRight') { playing=false; btnPP.setAttribute('aria-pressed','false'); goNext(); }
+      if(e.key==='ArrowLeft')  { playing=false; btnPP.setAttribute('aria-pressed','false'); goPrev(); }
+      if(e.key===' ') { e.preventDefault(); btnPP.click(); }
+      if(e.key==='m' || e.key==='M') { btnMute.click(); }
+    });
+
+    function boot(){
+      frameA.src = SLIDES[0].src;
+      idxEl.textContent = 1;
+      restartProgress();
+    }
+
+    async function startPresentation({mute=false}={}){
+      try{ 
+        bgm.muted = mute; 
+        await bgm.play(); 
+      } catch(err){ 
+        try { bgm.muted = true; await bgm.play(); } catch(e){}
+      }
+      muted = bgm.muted; 
+      btnMute.textContent = muted ? '🔇' : '🔊';
+      gate.remove();
+      boot();
+    }
+
+    startBtn.addEventListener('click', ()=> startPresentation({mute:false}));
+    startMutedBtn.addEventListener('click', ()=> startPresentation({mute:true}));
+
+    // 🔹 Solo iniciar automáticamente si se activa manualmente
+    if (INIT_AUTOSTART) {
+      setTimeout(() => {
+        startPresentation({ mute: true });
+      }, 400);
+    }
+  </script>
+</body>
+</html>

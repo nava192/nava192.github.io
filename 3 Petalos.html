@@ -1,0 +1,300 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<title>Escena nocturna sakura sin árboles (v5 cobertura completa)</title>
+<style>
+  * { box-sizing: border-box; }
+  html, body { height: 100%; }
+  body {
+    margin: 0;
+    overflow: hidden;
+    background: radial-gradient(ellipse at 50% -20%, #2b3b8e 0%, #0e1a34 45%, #0a1024 100%);
+    color: #fff;
+    font-family: system-ui, -apple-system, Segoe UI, Roboto, Ubuntu, Cantarell, 'Helvetica Neue', Arial;
+  }
+
+  /* === Texto en neón (añadido) === */
+  .neon-text {
+    position: fixed;
+    top: 8vh;
+    left: 50%;
+    transform: translateX(-50%);
+    font-size: 2.3em;
+    font-weight: 500;
+    color: #ffffff;
+    white-space: nowrap;
+    pointer-events: none;
+    z-index: 9999;
+    text-shadow:
+      0 0 5px #aee0ff,
+      0 0 10px #aee0ff,
+      0 0 20px #6fb9ff,
+      0 0 40px #007fff;
+    animation: neonPulse 2.5s ease-in-out infinite;
+  }
+  @keyframes neonPulse {
+    0%, 100% {
+      text-shadow:
+        0 0 4px #aee0ff,
+        0 0 10px #aee0ff,
+        0 0 20px #6fb9ff,
+        0 0 40px #007fff;
+    }
+    50% {
+      text-shadow:
+        0 0 2px #aee0ff,
+        0 0 6px #6fb9ff,
+        0 0 14px #007fff,
+        0 0 30px #007fff;
+    }
+  }
+
+  /* Luna animada */
+  .moon {
+    position: absolute;
+    top: 12vh;
+    left: 20vw;
+    width: 120px; height: 120px; border-radius:50%;
+    background: radial-gradient(circle at 35% 35%, #fffef4 0%, #fff5cf 45%, #e8ddbd 60%, #e8ddbd 62%, #d6cfae 70%, #c7bd98 100%);
+    animation: moveMoon 120s linear infinite alternate;
+  }
+  .moon::after { content:""; position:absolute; inset:-40px; border-radius:50%;
+    background: radial-gradient(circle, rgba(255,255,230,.55) 0%, rgba(255,255,230,.35) 35%, rgba(255,255,230,0) 70%);
+    filter: blur(6px);
+  }
+  @keyframes moveMoon { from { transform: translateX(0); } to { transform: translateX(50vw); } }
+
+  /* Montañas */
+  .mountains { position: absolute; inset: 0; pointer-events: none; }
+  .layer { position:absolute; bottom:0; width:140vw; left:-20vw; }
+  .layer svg { width:100%; height:auto; display:block; }
+  .l1 { filter: drop-shadow(0 10px 20px rgba(0,0,0,.2)); animation: drift1 50s linear infinite alternate; }
+  .l2 { opacity:.9; animation: drift2 70s linear infinite alternate; }
+  .l3 { opacity:.8; animation: drift3 90s linear infinite alternate; }
+  @keyframes drift1 { from { transform: translateX(0); } to { transform: translateX(-30px); } }
+  @keyframes drift2 { from { transform: translateX(0); } to { transform: translateX(40px); } }
+  @keyframes drift3 { from { transform: translateX(0); } to { transform: translateX(-50px); } }
+
+  .fog { position: absolute; bottom:0; left:0; right:0; height:40vh;
+    background: linear-gradient(to top, rgba(160,170,220,.25), rgba(160,170,220,.12) 35%, rgba(160,170,220,0) 80%);
+    pointer-events:none;
+  }
+  .ground { position:absolute; bottom:0; left:0; right:0; height:15vh;
+    background: linear-gradient(to top, #0b0f20, #0b0f20 60%, transparent 100%);
+  }
+
+  /* Pétalos: cobertura total (spawn -5vw..105vw) + viento a ambos lados */
+  .petal-layer { position: fixed; inset:0; pointer-events:none; z-index:5; }
+  .petal-layer .pet {
+    position:absolute; display:block;
+    border-radius: 200px 10px 200px 200px;
+    background: linear-gradient(to right, #ffd1e3, #ff9fbd);
+    filter: drop-shadow(0 1px 6px rgba(252,123,209,.28));
+    transform: translate3d(0,0,0) skewX(30deg) rotate(var(--rot,0deg));
+    will-change: transform, opacity;
+    animation: fall var(--dur,14s) linear infinite;
+    animation-delay: var(--delay,0s);
+    opacity: 0;
+  }
+  @keyframes fall {
+    0%   { transform: translate3d(0, -8vh, 0) rotate(var(--rot,0deg)) skewX(30deg); opacity: 0; }
+    6%   { opacity: 1; }
+    100% { transform: translate3d(var(--driftX,320px), 110vh, 0) rotate(calc(var(--rot,0deg) + 540deg)) skewX(30deg); opacity: .25; }
+  }
+</style>
+</head>
+<body>
+  <!-- Texto en neón (añadido) -->
+  <div class="neon-text">Como un pétalo a la deriva del viento 🍃</div>
+
+  <div class="moon"></div>
+
+  <div class="mountains">
+    <div class="layer l3">
+      <svg viewBox="0 0 1600 400" preserveAspectRatio="none">
+        <path d="M0,300 L200,220 L350,260 L520,210 L700,250 L900,180 L1100,240 L1300,200 L1600,260 L1600,400 L0,400 Z"
+              fill="#172a52"/>
+      </svg>
+    </div>
+    <div class="layer l2">
+      <svg viewBox="0 0 1600 400" preserveAspectRatio="none">
+        <path d="M0,320 L160,260 L260,300 L420,240 L560,270 L720,230 L900,260 L1080,220 L1300,280 L1600,260 L1600,400 L0,400 Z"
+              fill="#1b3361"/>
+      </svg>
+    </div>
+    <div class="layer l1">
+      <svg viewBox="0 0 1600 400" preserveAspectRatio="none">
+        <path d="M0,340 L140,300 L260,320 L420,300 L560,320 L720,300 L900,320 L1080,300 L1300,330 L1600,310 L1600,400 L0,400 Z"
+              fill="#223b73"/>
+      </svg>
+    </div>
+  </div>
+
+  <div class="fog"></div>
+  <div class="ground"></div>
+
+  <div class="petal-layer">
+      <span class="pet" style="left:20.23vw; top:-16.65vh; width:32px; height:22px; --delay:2.95s; --dur:12.16s; --driftX:55px; --rot:15deg;"></span>
+      <span class="pet" style="left:95.35vw; top:-14.53vh; width:16px; height:11px; --delay:3.12s; --dur:12.31s; --driftX:515px; --rot:26deg;"></span>
+      <span class="pet" style="left:92.70vw; top:-20.76vh; width:28px; height:19px; --delay:5.92s; --dur:17.47s; --driftX:-179px; --rot:9deg;"></span>
+      <span class="pet" style="left:26.59vw; top:-18.79vh; width:32px; height:22px; --delay:5.05s; --dur:16.97s; --driftX:39px; --rot:-22deg;"></span>
+      <span class="pet" style="left:59.54vw; top:-21.59vh; width:28px; height:19px; --delay:4.88s; --dur:14.61s; --driftX:-127px; --rot:3deg;"></span>
+      <span class="pet" style="left:90.57vw; top:-13.72vh; width:32px; height:22px; --delay:0.75s; --dur:13.60s; --driftX:-172px; --rot:-15deg;"></span>
+      <span class="pet" style="left:4.73vw; top:-19.86vh; width:28px; height:19px; --delay:7.61s; --dur:15.96s; --driftX:195px; --rot:23deg;"></span>
+      <span class="pet" style="left:28.70vw; top:-10.16vh; width:32px; height:22px; --delay:7.93s; --dur:10.99s; --driftX:404px; --rot:-28deg;"></span>
+      <span class="pet" style="left:59.52vw; top:-18.82vh; width:32px; height:22px; --delay:2.14s; --dur:10.09s; --driftX:309px; --rot:18deg;"></span>
+      <span class="pet" style="left:37.42vw; top:-14.16vh; width:28px; height:19px; --delay:3.98s; --dur:13.25s; --driftX:99px; --rot:-9deg;"></span>
+      <span class="pet" style="left:69.36vw; top:-14.74vh; width:32px; height:22px; --delay:0.42s; --dur:16.45s; --driftX:440px; --rot:-8deg;"></span>
+      <span class="pet" style="left:11.57vw; top:-18.55vh; width:16px; height:11px; --delay:5.29s; --dur:15.48s; --driftX:454px; --rot:25deg;"></span>
+      <span class="pet" style="left:89.92vw; top:-16.13vh; width:28px; height:19px; --delay:4.13s; --dur:13.82s; --driftX:-83px; --rot:-25deg;"></span>
+      <span class="pet" style="left:24.34vw; top:-16.88vh; width:16px; height:11px; --delay:7.20s; --dur:14.74s; --driftX:218px; --rot:-25deg;"></span>
+      <span class="pet" style="left:32.32vw; top:-17.36vh; width:16px; height:11px; --delay:5.34s; --dur:15.96s; --driftX:250px; --rot:9deg;"></span>
+      <span class="pet" style="left:61.30vw; top:-16.45vh; width:16px; height:11px; --delay:4.51s; --dur:14.31s; --driftX:339px; --rot:-7deg;"></span>
+      <span class="pet" style="left:16.92vw; top:-17.82vh; width:16px; height:11px; --delay:7.05s; --dur:13.42s; --driftX:342px; --rot:17deg;"></span>
+      <span class="pet" style="left:85.68vw; top:-14.15vh; width:16px; height:11px; --delay:3.75s; --dur:10.51s; --driftX:-138px; --rot:-13deg;"></span>
+      <span class="pet" style="left:9.04vw; top:-11.59vh; width:32px; height:22px; --delay:6.34s; --dur:17.41s; --driftX:-54px; --rot:4deg;"></span>
+      <span class="pet" style="left:29.01vw; top:-18.62vh; width:32px; height:22px; --delay:0.47s; --dur:15.59s; --driftX:374px; --rot:25deg;"></span>
+      <span class="pet" style="left:22.40vw; top:-11.21vh; width:32px; height:22px; --delay:3.09s; --dur:15.33s; --driftX:-29px; --rot:22deg;"></span>
+      <span class="pet" style="left:64.03vw; top:-18.98vh; width:22px; height:15px; --delay:3.10s; --dur:13.43s; --driftX:-81px; --rot:-29deg;"></span>
+      <span class="pet" style="left:48.17vw; top:-15.98vh; width:32px; height:22px; --delay:0.54s; --dur:13.83s; --driftX:-174px; --rot:-14deg;"></span>
+      <span class="pet" style="left:49.51vw; top:-16.62vh; width:22px; height:15px; --delay:4.26s; --dur:13.34s; --driftX:353px; --rot:1deg;"></span>
+      <span class="pet" style="left:65.22vw; top:-18.72vh; width:28px; height:19px; --delay:5.94s; --dur:17.49s; --driftX:57px; --rot:17deg;"></span>
+      <span class="pet" style="left:12.72vw; top:-12.46vh; width:32px; height:22px; --delay:6.47s; --dur:14.59s; --driftX:65px; --rot:-22deg;"></span>
+      <span class="pet" style="left:44.14vw; top:-11.74vh; width:32px; height:22px; --delay:6.13s; --dur:17.81s; --driftX:393px; --rot:-23deg;"></span>
+      <span class="pet" style="left:103.25vw; top:-14.74vh; width:32px; height:22px; --delay:4.17s; --dur:11.10s; --driftX:484px; --rot:16deg;"></span>
+      <span class="pet" style="left:84.34vw; top:-14.45vh; width:22px; height:15px; --delay:2.99s; --dur:14.09s; --driftX:143px; --rot:11deg;"></span>
+      <span class="pet" style="left:70.56vw; top:-16.06vh; width:32px; height:22px; --delay:7.19s; --dur:11.91s; --driftX:324px; --rot:4deg;"></span>
+      <span class="pet" style="left:56.21vw; top:-18.24vh; width:16px; height:11px; --delay:5.05s; --dur:15.35s; --driftX:-127px; --rot:14deg;"></span>
+      <span class="pet" style="left:76.20vw; top:-13.87vh; width:32px; height:22px; --delay:0.71s; --dur:15.31s; --driftX:494px; --rot:-29deg;"></span>
+      <span class="pet" style="left:41.22vw; top:-14.42vh; width:22px; height:15px; --delay:0.26s; --dur:12.48s; --driftX:150px; --rot:-19deg;"></span>
+      <span class="pet" style="left:28.42vw; top:-17.49vh; width:32px; height:22px; --delay:2.39s; --dur:17.89s; --driftX:99px; --rot:6deg;"></span>
+      <span class="pet" style="left:10.61vw; top:-12.54vh; width:32px; height:22px; --delay:6.12s; --dur:11.16s; --driftX:-76px; --rot:4deg;"></span>
+      <span class="pet" style="left:88.35vw; top:-11.70vh; width:32px; height:22px; --delay:6.92s; --dur:10.71s; --driftX:-54px; --rot:-20deg;"></span>
+      <span class="pet" style="left:104.83vw; top:-14.49vh; width:28px; height:19px; --delay:2.71s; --dur:16.29s; --driftX:-168px; --rot:3deg;"></span>
+      <span class="pet" style="left:24.73vw; top:-11.28vh; width:16px; height:11px; --delay:5.15s; --dur:14.28s; --driftX:-57px; --rot:28deg;"></span>
+      <span class="pet" style="left:41.55vw; top:-11.02vh; width:22px; height:15px; --delay:1.01s; --dur:16.22s; --driftX:337px; --rot:-22deg;"></span>
+      <span class="pet" style="left:82.08vw; top:-13.47vh; width:16px; height:11px; --delay:6.33s; --dur:17.67s; --driftX:-30px; --rot:2deg;"></span>
+      <span class="pet" style="left:8.13vw; top:-12.66vh; width:22px; height:15px; --delay:4.04s; --dur:13.35s; --driftX:235px; --rot:-6deg;"></span>
+      <span class="pet" style="left:84.24vw; top:-20.40vh; width:32px; height:22px; --delay:0.52s; --dur:15.83s; --driftX:-48px; --rot:-29deg;"></span>
+      <span class="pet" style="left:52.10vw; top:-14.11vh; width:28px; height:19px; --delay:4.30s; --dur:15.55s; --driftX:-10px; --rot:10deg;"></span>
+      <span class="pet" style="left:74.26vw; top:-10.31vh; width:22px; height:15px; --delay:2.45s; --dur:17.44s; --driftX:265px; --rot:14deg;"></span>
+      <span class="pet" style="left:65.05vw; top:-16.65vh; width:28px; height:19px; --delay:7.38s; --dur:13.39s; --driftX:358px; --rot:-15deg;"></span>
+      <span class="pet" style="left:71.85vw; top:-10.57vh; width:22px; height:15px; --delay:4.89s; --dur:15.23s; --driftX:-177px; --rot:-20deg;"></span>
+      <span class="pet" style="left:72.64vw; top:-17.09vh; width:16px; height:11px; --delay:3.60s; --dur:17.86s; --driftX:-107px; --rot:-9deg;"></span>
+      <span class="pet" style="left:15.87vw; top:-14.03vh; width:28px; height:19px; --delay:3.43s; --dur:11.59s; --driftX:-82px; --rot:18deg;"></span>
+      <span class="pet" style="left:72.87vw; top:-14.87vh; width:22px; height:15px; --delay:4.94s; --dur:15.30s; --driftX:312px; --rot:-2deg;"></span>
+      <span class="pet" style="left:11.97vw; top:-20.58vh; width:32px; height:22px; --delay:3.81s; --dur:16.45s; --driftX:282px; --rot:-14deg;"></span>
+      <span class="pet" style="left:74.14vw; top:-13.53vh; width:28px; height:19px; --delay:2.05s; --dur:13.89s; --driftX:-128px; --rot:27deg;"></span>
+      <span class="pet" style="left:78.18vw; top:-19.15vh; width:16px; height:11px; --delay:7.56s; --dur:11.54s; --driftX:-80px; --rot:7deg;"></span>
+      <span class="pet" style="left:101.90vw; top:-10.62vh; width:32px; height:22px; --delay:2.29s; --dur:11.35s; --driftX:356px; --rot:6deg;"></span>
+      <span class="pet" style="left:20.64vw; top:-11.03vh; width:16px; height:11px; --delay:0.07s; --dur:10.23s; --driftX:349px; --rot:8deg;"></span>
+      <span class="pet" style="left:35.97vw; top:-14.22vh; width:28px; height:19px; --delay:1.39s; --dur:11.48s; --driftX:113px; --rot:-28deg;"></span>
+      <span class="pet" style="left:104.98vw; top:-17.11vh; width:32px; height:22px; --delay:7.70s; --dur:17.42s; --driftX:426px; --rot:-26deg;"></span>
+      <span class="pet" style="left:83.22vw; top:-15.51vh; width:32px; height:22px; --delay:2.85s; --dur:17.89s; --driftX:163px; --rot:-9deg;"></span>
+      <span class="pet" style="left:42.29vw; top:-20.99vh; width:28px; height:19px; --delay:3.18s; --dur:10.36s; --driftX:479px; --rot:6deg;"></span>
+      <span class="pet" style="left:21.65vw; top:-16.68vh; width:22px; height:15px; --delay:2.99s; --dur:14.08s; --driftX:235px; --rot:23deg;"></span>
+      <span class="pet" style="left:95.69vw; top:-16.82vh; width:32px; height:22px; --delay:6.60s; --dur:10.75s; --driftX:-38px; --rot:26deg;"></span>
+      <span class="pet" style="left:96.85vw; top:-19.56vh; width:16px; height:11px; --delay:3.65s; --dur:13.79s; --driftX:278px; --rot:6deg;"></span>
+      <span class="pet" style="left:17.54vw; top:-19.03vh; width:28px; height:19px; --delay:2.68s; --dur:10.73s; --driftX:-6px; --rot:-12deg;"></span>
+      <span class="pet" style="left:104.72vw; top:-20.56vh; width:28px; height:19px; --delay:4.28s; --dur:17.44s; --driftX:340px; --rot:10deg;"></span>
+      <span class="pet" style="left:79.72vw; top:-12.30vh; width:28px; height:19px; --delay:2.48s; --dur:16.61s; --driftX:97px; --rot:26deg;"></span>
+      <span class="pet" style="left:35.92vw; top:-14.11vh; width:16px; height:11px; --delay:3.64s; --dur:15.79s; --driftX:463px; --rot:-1deg;"></span>
+      <span class="pet" style="left:0.66vw; top:-10.74vh; width:22px; height:15px; --delay:1.12s; --dur:15.07s; --driftX:-96px; --rot:23deg;"></span>
+      <span class="pet" style="left:39.08vw; top:-20.61vh; width:28px; height:19px; --delay:3.20s; --dur:12.78s; --driftX:108px; --rot:24deg;"></span>
+      <span class="pet" style="left:76.42vw; top:-16.22vh; width:28px; height:19px; --delay:5.95s; --dur:16.20s; --driftX:-112px; --rot:-21deg;"></span>
+      <span class="pet" style="left:92.42vw; top:-13.64vh; width:28px; height:19px; --delay:3.22s; --dur:15.37s; --driftX:-55px; --rot:-18deg;"></span>
+      <span class="pet" style="left:70.63vw; top:-19.44vh; width:28px; height:19px; --delay:0.55s; --dur:15.34s; --driftX:300px; --rot:15deg;"></span>
+      <span class="pet" style="left:-0.04vw; top:-21.18vh; width:28px; height:19px; --delay:6.01s; --dur:16.15s; --driftX:416px; --rot:-5deg;"></span>
+      <span class="pet" style="left:43.90vw; top:-12.99vh; width:16px; height:11px; --delay:6.07s; --dur:17.49s; --driftX:29px; --rot:24deg;"></span>
+      <span class="pet" style="left:57.36vw; top:-15.79vh; width:32px; height:22px; --delay:4.98s; --dur:17.48s; --driftX:174px; --rot:-15deg;"></span>
+      <span class="pet" style="left:90.94vw; top:-10.71vh; width:22px; height:15px; --delay:1.19s; --dur:14.19s; --driftX:505px; --rot:-22deg;"></span>
+      <span class="pet" style="left:61.34vw; top:-19.28vh; width:22px; height:15px; --delay:4.29s; --dur:14.40s; --driftX:128px; --rot:11deg;"></span>
+      <span class="pet" style="left:63.48vw; top:-15.82vh; width:22px; height:15px; --delay:7.17s; --dur:14.33s; --driftX:370px; --rot:-25deg;"></span>
+      <span class="pet" style="left:69.02vw; top:-11.07vh; width:28px; height:19px; --delay:4.80s; --dur:11.99s; --driftX:-127px; --rot:2deg;"></span>
+      <span class="pet" style="left:-1.16vw; top:-14.00vh; width:32px; height:22px; --delay:6.34s; --dur:10.68s; --driftX:265px; --rot:-26deg;"></span>
+      <span class="pet" style="left:100.66vw; top:-15.29vh; width:32px; height:22px; --delay:5.02s; --dur:12.83s; --driftX:401px; --rot:-6deg;"></span>
+      <span class="pet" style="left:47.95vw; top:-21.40vh; width:32px; height:22px; --delay:3.17s; --dur:14.57s; --driftX:17px; --rot:-23deg;"></span>
+      <span class="pet" style="left:7.11vw; top:-15.14vh; width:22px; height:15px; --delay:6.22s; --dur:15.39s; --driftX:88px; --rot:-22deg;"></span>
+      <span class="pet" style="left:22.10vw; top:-12.95vh; width:22px; height:15px; --delay:6.06s; --dur:13.44s; --driftX:456px; --rot:-15deg;"></span>
+      <span class="pet" style="left:55.39vw; top:-17.21vh; width:22px; height:15px; --delay:4.87s; --dur:11.44s; --driftX:148px; --rot:8deg;"></span>
+      <span class="pet" style="left:32.15vw; top:-21.01vh; width:16px; height:11px; --delay:7.96s; --dur:15.05s; --driftX:389px; --rot:-24deg;"></span>
+      <span class="pet" style="left:18.91vw; top:-20.37vh; width:32px; height:22px; --delay:7.91s; --dur:11.40s; --driftX:210px; --rot:4deg;"></span>
+      <span class="pet" style="left:-3.18vw; top:-14.27vh; width:32px; height:22px; --delay:3.03s; --dur:17.91s; --driftX:263px; --rot:-9deg;"></span>
+      <span class="pet" style="left:16.15vw; top:-21.83vh; width:22px; height:15px; --delay:2.12s; --dur:10.98s; --driftX:470px; --rot:5deg;"></span>
+      <span class="pet" style="left:29.82vw; top:-15.92vh; width:16px; height:11px; --delay:7.94s; --dur:14.89s; --driftX:446px; --rot:-0deg;"></span>
+      <span class="pet" style="left:39.69vw; top:-10.10vh; width:22px; height:15px; --delay:3.45s; --dur:10.16s; --driftX:-143px; --rot:-28deg;"></span>
+      <span class="pet" style="left:45.91vw; top:-19.55vh; width:28px; height:19px; --delay:5.54s; --dur:17.05s; --driftX:-93px; --rot:-26deg;"></span>
+      <span class="pet" style="left:27.79vw; top:-21.09vh; width:16px; height:11px; --delay:0.25s; --dur:11.46s; --driftX:114px; --rot:-21deg;"></span>
+      <span class="pet" style="left:5.69vw; top:-13.22vh; width:22px; height:15px; --delay:0.71s; --dur:16.28s; --driftX:405px; --rot:14deg;"></span>
+      <span class="pet" style="left:39.33vw; top:-21.90vh; width:16px; height:11px; --delay:5.64s; --dur:16.76s; --driftX:470px; --rot:-18deg;"></span>
+      <span class="pet" style="left:-4.80vw; top:-17.04vh; width:32px; height:22px; --delay:4.93s; --dur:11.16s; --driftX:467px; --rot:-21deg;"></span>
+      <span class="pet" style="left:60.65vw; top:-14.83vh; width:22px; height:15px; --delay:4.23s; --dur:15.03s; --driftX:518px; --rot:-0deg;"></span>
+      <span class="pet" style="left:60.56vw; top:-14.57vh; width:28px; height:19px; --delay:1.46s; --dur:10.70s; --driftX:-84px; --rot:25deg;"></span>
+      <span class="pet" style="left:54.34vw; top:-14.24vh; width:22px; height:15px; --delay:5.57s; --dur:14.84s; --driftX:317px; --rot:-17deg;"></span>
+      <span class="pet" style="left:101.92vw; top:-19.33vh; width:28px; height:19px; --delay:4.62s; --dur:12.18s; --driftX:-39px; --rot:-15deg;"></span>
+      <span class="pet" style="left:71.64vw; top:-10.70vh; width:28px; height:19px; --delay:4.46s; --dur:16.08s; --driftX:-136px; --rot:-29deg;"></span>
+      <span class="pet" style="left:87.49vw; top:-10.34vh; width:28px; height:19px; --delay:6.96s; --dur:11.71s; --driftX:383px; --rot:9deg;"></span>
+      <span class="pet" style="left:24.77vw; top:-18.95vh; width:28px; height:19px; --delay:0.27s; --dur:15.41s; --driftX:122px; --rot:22deg;"></span>
+      <span class="pet" style="left:3.42vw; top:-13.18vh; width:22px; height:15px; --delay:4.99s; --dur:15.30s; --driftX:429px; --rot:18deg;"></span>
+      <span class="pet" style="left:95.63vw; top:-15.64vh; width:16px; height:11px; --delay:4.74s; --dur:10.40s; --driftX:-92px; --rot:-1deg;"></span>
+      <span class="pet" style="left:14.92vw; top:-19.77vh; width:22px; height:15px; --delay:0.17s; --dur:10.97s; --driftX:317px; --rot:2deg;"></span>
+      <span class="pet" style="left:72.68vw; top:-17.07vh; width:28px; height:19px; --delay:6.16s; --dur:17.09s; --driftX:262px; --rot:21deg;"></span>
+      <span class="pet" style="left:26.24vw; top:-16.72vh; width:16px; height:11px; --delay:7.22s; --dur:12.27s; --driftX:25px; --rot:-19deg;"></span>
+      <span class="pet" style="left:17.07vw; top:-18.03vh; width:28px; height:19px; --delay:1.50s; --dur:14.30s; --driftX:-114px; --rot:-6deg;"></span>
+      <span class="pet" style="left:91.60vw; top:-14.70vh; width:32px; height:22px; --delay:2.80s; --dur:14.32s; --driftX:490px; --rot:-0deg;"></span>
+      <span class="pet" style="left:21.29vw; top:-11.06vh; width:32px; height:22px; --delay:6.31s; --dur:16.67s; --driftX:170px; --rot:24deg;"></span>
+      <span class="pet" style="left:33.07vw; top:-10.68vh; width:28px; height:19px; --delay:5.00s; --dur:14.27s; --driftX:61px; --rot:16deg;"></span>
+      <span class="pet" style="left:103.68vw; top:-20.67vh; width:28px; height:19px; --delay:0.94s; --dur:17.72s; --driftX:-134px; --rot:-18deg;"></span>
+      <span class="pet" style="left:63.75vw; top:-10.07vh; width:32px; height:22px; --delay:3.51s; --dur:10.34s; --driftX:344px; --rot:10deg;"></span>
+      <span class="pet" style="left:31.47vw; top:-16.13vh; width:16px; height:11px; --delay:1.53s; --dur:12.28s; --driftX:1px; --rot:25deg;"></span>
+      <span class="pet" style="left:86.34vw; top:-19.18vh; width:16px; height:11px; --delay:2.84s; --dur:14.94s; --driftX:104px; --rot:20deg;"></span>
+      <span class="pet" style="left:70.38vw; top:-13.97vh; width:32px; height:22px; --delay:6.92s; --dur:16.58s; --driftX:-147px; --rot:14deg;"></span>
+      <span class="pet" style="left:41.12vw; top:-17.65vh; width:16px; height:11px; --delay:7.11s; --dur:13.73s; --driftX:398px; --rot:-29deg;"></span>
+      <span class="pet" style="left:68.79vw; top:-17.71vh; width:22px; height:15px; --delay:3.48s; --dur:11.01s; --driftX:-7px; --rot:-25deg;"></span>
+      <span class="pet" style="left:31.13vw; top:-11.55vh; width:22px; height:15px; --delay:2.89s; --dur:10.28s; --driftX:260px; --rot:-3deg;"></span>
+      <span class="pet" style="left:94.53vw; top:-19.70vh; width:28px; height:19px; --delay:5.19s; --dur:13.28s; --driftX:424px; --rot:-15deg;"></span>
+      <span class="pet" style="left:53.80vw; top:-16.53vh; width:32px; height:22px; --delay:0.78s; --dur:11.20s; --driftX:157px; --rot:2deg;"></span>
+      <span class="pet" style="left:30.11vw; top:-13.97vh; width:16px; height:11px; --delay:7.90s; --dur:15.89s; --driftX:388px; --rot:-19deg;"></span>
+      <span class="pet" style="left:96.11vw; top:-17.63vh; width:32px; height:22px; --delay:3.24s; --dur:16.77s; --driftX:139px; --rot:-29deg;"></span>
+      <span class="pet" style="left:71.05vw; top:-13.91vh; width:28px; height:19px; --delay:0.19s; --dur:17.22s; --driftX:-31px; --rot:-29deg;"></span>
+      <span class="pet" style="left:3.65vw; top:-11.93vh; width:28px; height:19px; --delay:7.77s; --dur:11.97s; --driftX:348px; --rot:-19deg;"></span>
+      <span class="pet" style="left:22.35vw; top:-20.48vh; width:22px; height:15px; --delay:4.10s; --dur:17.65s; --driftX:99px; --rot:18deg;"></span>
+      <span class="pet" style="left:96.61vw; top:-15.34vh; width:22px; height:15px; --delay:3.67s; --dur:15.29s; --driftX:36px; --rot:2deg;"></span>
+      <span class="pet" style="left:36.39vw; top:-18.48vh; width:22px; height:15px; --delay:6.84s; --dur:10.68s; --driftX:378px; --rot:-22deg;"></span>
+      <span class="pet" style="left:78.54vw; top:-17.87vh; width:16px; height:11px; --delay:1.05s; --dur:15.04s; --driftX:377px; --rot:-15deg;"></span>
+      <span class="pet" style="left:-0.98vw; top:-16.69vh; width:22px; height:15px; --delay:2.55s; --dur:17.24s; --driftX:-9px; --rot:-20deg;"></span>
+      <span class="pet" style="left:1.38vw; top:-18.35vh; width:22px; height:15px; --delay:2.71s; --dur:16.86s; --driftX:-32px; --rot:25deg;"></span>
+      <span class="pet" style="left:31.92vw; top:-20.92vh; width:22px; height:15px; --delay:3.56s; --dur:17.03s; --driftX:-66px; --rot:-27deg;"></span>
+      <span class="pet" style="left:12.52vw; top:-16.57vh; width:28px; height:19px; --delay:1.71s; --dur:10.03s; --driftX:118px; --rot:13deg;"></span>
+      <span class="pet" style="left:81.98vw; top:-18.06vh; width:28px; height:19px; --delay:3.76s; --dur:13.32s; --driftX:-121px; --rot:-15deg;"></span>
+      <span class="pet" style="left:17.52vw; top:-20.92vh; width:32px; height:22px; --delay:3.59s; --dur:14.33s; --driftX:451px; --rot:10deg;"></span>
+      <span class="pet" style="left:37.21vw; top:-16.39vh; width:28px; height:19px; --delay:5.28s; --dur:12.42s; --driftX:345px; --rot:-2deg;"></span>
+      <span class="pet" style="left:66.96vw; top:-11.97vh; width:32px; height:22px; --delay:7.19s; --dur:12.46s; --driftX:-106px; --rot:3deg;"></span>
+      <span class="pet" style="left:7.03vw; top:-19.16vh; width:32px; height:22px; --delay:6.00s; --dur:10.76s; --driftX:111px; --rot:9deg;"></span>
+      <span class="pet" style="left:15.49vw; top:-19.93vh; width:32px; height:22px; --delay:5.53s; --dur:12.20s; --driftX:39px; --rot:-6deg;"></span>
+      <span class="pet" style="left:93.02vw; top:-11.39vh; width:28px; height:19px; --delay:6.78s; --dur:11.98s; --driftX:248px; --rot:24deg;"></span>
+      <span class="pet" style="left:43.40vw; top:-20.55vh; width:28px; height:19px; --delay:1.70s; --dur:14.39s; --driftX:129px; --rot:20deg;"></span>
+      <span class="pet" style="left:2.54vw; top:-17.12vh; width:16px; height:11px; --delay:5.73s; --dur:12.68s; --driftX:259px; --rot:22deg;"></span>
+      <span class="pet" style="left:89.29vw; top:-14.47vh; width:22px; height:15px; --delay:4.17s; --dur:13.20s; --driftX:0px; --rot:17deg;"></span>
+      <span class="pet" style="left:72.12vw; top:-14.10vh; width:28px; height:19px; --delay:7.66s; --dur:13.16s; --driftX:350px; --rot:-28deg;"></span>
+      <span class="pet" style="left:10.22vw; top:-18.94vh; width:16px; height:11px; --delay:0.07s; --dur:10.08s; --driftX:-170px; --rot:-9deg;"></span>
+      <span class="pet" style="left:52.56vw; top:-19.52vh; width:32px; height:22px; --delay:1.47s; --dur:12.46s; --driftX:-20px; --rot:23deg;"></span>
+      <span class="pet" style="left:97.87vw; top:-20.66vh; width:28px; height:19px; --delay:5.85s; --dur:17.84s; --driftX:-112px; --rot:17deg;"></span>
+      <span class="pet" style="left:21.00vw; top:-21.97vh; width:28px; height:19px; --delay:7.22s; --dur:17.65s; --driftX:-108px; --rot:-21deg;"></span>
+      <span class="pet" style="left:10.30vw; top:-13.55vh; width:32px; height:22px; --delay:7.38s; --dur:12.59s; --driftX:331px; --rot:-1deg;"></span>
+      <span class="pet" style="left:85.17vw; top:-14.61vh; width:22px; height:15px; --delay:0.02s; --dur:15.16s; --driftX:77px; --rot:14deg;"></span>
+      <span class="pet" style="left:81.05vw; top:-19.77vh; width:32px; height:22px; --delay:3.81s; --dur:17.26s; --driftX:-178px; --rot:-18deg;"></span>
+      <span class="pet" style="left:67.10vw; top:-21.72vh; width:32px; height:22px; --delay:1.79s; --dur:17.96s; --driftX:-82px; --rot:-21deg;"></span>
+      <span class="pet" style="left:52.04vw; top:-19.76vh; width:22px; height:15px; --delay:2.86s; --dur:11.96s; --driftX:53px; --rot:22deg;"></span>
+      <span class="pet" style="left:56.51vw; top:-19.62vh; width:32px; height:22px; --delay:4.26s; --dur:17.02s; --driftX:195px; --rot:-26deg;"></span>
+      <span class="pet" style="left:39.39vw; top:-17.18vh; width:32px; height:22px; --delay:4.90s; --dur:15.25s; --driftX:-67px; --rot:20deg;"></span>
+      <span class="pet" style="left:59.90vw; top:-14.14vh; width:32px; height:22px; --delay:3.97s; --dur:11.02s; --driftX:298px; --rot:14deg;"></span>
+      <span class="pet" style="left:46.16vw; top:-14.37vh; width:32px; height:22px; --delay:0.29s; --dur:15.62s; --driftX:465px; --rot:-4deg;"></span>
+      <span class="pet" style="left:62.28vw; top:-16.87vh; width:32px; height:22px; --delay:7.63s; --dur:15.48s; --driftX:284px; --rot:20deg;"></span>
+      <span class="pet" style="left:83.09vw; top:-11.07vh; width:28px; height:19px; --delay:0.12s; --dur:14.28s; --driftX:2px; --rot:-25deg;"></span>
+      <span class="pet" style="left:0.52vw; top:-12.23vh; width:16px; height:11px; --delay:0.61s; --dur:13.85s; --driftX:366px; --rot:-14deg;"></span>
+      <span class="pet" style="left:8.86vw; top:-20.30vh; width:22px; height:15px; --delay:5.23s; --dur:11.18s; --driftX:246px; --rot:19deg;"></span>
+  </div>
+</body>
+</html>

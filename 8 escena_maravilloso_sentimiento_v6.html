@@ -1,0 +1,145 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Un maravilloso sentimiento ❤</title>
+  <style>
+    :root{
+      --bg1:#060913;
+      --bg2:#0b1224;
+      --accent:#9fd6ff;
+    }
+    *{box-sizing:border-box}
+    html,body{
+      height:100%;
+      margin:0;
+      background: radial-gradient(1200px 800px at 50% 110%, var(--bg2), var(--bg1) 60%);
+      font-family: system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial;
+      overflow:hidden;
+      color:#fff;
+    }
+    #scene{
+      position:fixed; inset:0; width:100vw; height:100vh; display:block;
+      background:
+        radial-gradient(800px 600px at 50% -200px, rgba(255,255,255,.035), rgba(255,255,255,0) 60%),
+        radial-gradient(600px 400px at 10% 90%, rgba(120,180,255,.05), rgba(120,180,255,0) 60%);
+      filter:saturate(105%);
+    }
+    .title{
+      position:fixed; left:50%; top:50%; transform:translate(-50%,-50%);
+      font-weight:700; text-align:center;
+      font-size: clamp(22px, 3.5vw + 1rem, 44px);
+      color:#fff;
+      text-shadow:
+        0 0 2px rgba(255,255,255,.9),
+        0 0 6px rgba(255,255,255,.7),
+        0 0 16px rgba(159,214,255,.45),
+        0 0 30px rgba(159,214,255,.3);
+      animation: breathe 6s ease-in-out infinite;
+    }
+    @keyframes breathe{0%,100%{opacity:1} 50%{opacity:.92}}
+    .vignette{position:fixed; inset:0; pointer-events:none;
+      background: radial-gradient(60% 60% at 50% 55%, rgba(0,0,0,0) 65%, rgba(0,0,0,.2) 100%);
+      mix-blend-mode:multiply;
+    }
+    .stars{position:fixed; inset:0; pointer-events:none;
+      background-image:
+        radial-gradient(2px 2px at 20% 30%, rgba(255,255,255,.5) 50%, rgba(255,255,255,0) 52%),
+        radial-gradient(1px 1px at 70% 15%, rgba(255,255,255,.45) 50%, rgba(255,255,255,0) 52%),
+        radial-gradient(1.5px 1.5px at 85% 80%, rgba(255,255,255,.5) 50%, rgba(255,255,255,0) 52%),
+        radial-gradient(1px 1px at 40% 75%, rgba(255,255,255,.35) 50%, rgba(255,255,255,0) 52%),
+        radial-gradient(1.3px 1.3px at 15% 60%, rgba(255,255,255,.4) 50%, rgba(255,255,255,0) 52%);
+      opacity:.5; filter: blur(.2px);
+    }
+  </style>
+</head>
+<body>
+  <canvas id="scene"></canvas>
+  <div class="stars"></div>
+  <div class="vignette"></div>
+  <h1 class="title">un maravilloso sentimiento ❤</h1>
+<script>
+(() => {
+  const canvas = document.getElementById('scene');
+  const ctx = canvas.getContext('2d');
+  const DPR = Math.min(window.devicePixelRatio || 1, 2);
+  let W=0,H=0,T=0;
+  const params={speedY:25,sway:0.7,twinkle:2.0,glow:1.0,count:450};
+  let parts=[],heart=[];
+  function resize(){
+    W=innerWidth;H=innerHeight;
+    canvas.width=W*DPR;canvas.height=H*DPR;
+    ctx.setTransform(DPR,0,0,DPR,0,0);
+    buildHeart();
+  }
+  addEventListener('resize',resize);resize();
+  function buildHeart(){
+    heart=[];
+    const s=Math.min(W,H)*0.038; // reducido para que quepa completamente
+    const cx=W/2,cy=H*0.5;     
+    for(let i=0;i<1000;i++){
+      const t=Math.PI-(i/1000)*2*Math.PI;
+      const x=16*Math.pow(Math.sin(t),3);
+      const y=13*Math.cos(t)-5*Math.cos(2*t)-2*Math.cos(3*t)-Math.cos(4*t);
+      heart.push({x:cx+x*s,y:cy-y*s});
+    }
+    for(let i=0;i<600;i++){
+      const a=heart[Math.floor(Math.random()*heart.length)];
+      heart.push({x:a.x+(Math.random()-0.5)*20,y:a.y+(Math.random()-0.5)*20});
+    }
+  }
+  function spawn(){
+    const x=Math.random()*W,y=H+Math.random()*H*0.3;
+    return{
+      x,y,vx:(Math.random()-.5)*0.3,vy:-params.speedY/60*(.7+Math.random()*.5),
+      size:1+Math.random()*1.5,hue:38+Math.random()*40,phase:Math.random()*6,
+      target:heart[Math.floor(Math.random()*heart.length)],arrived:false
+    };
+  }
+  for(let i=0;i<params.count;i++)parts.push(spawn());
+  function update(dt){
+    for(const p of parts){
+      if(!p.arrived){
+        const dx=p.target.x-p.x,dy=p.target.y-p.y;
+        const d=Math.hypot(dx,dy);
+        if(d<4){p.arrived=true;p.vx=p.vy=0;continue;}
+        p.vx+=dx*0.002; p.vy+=dy*0.002;
+        p.vx*=0.93; p.vy*=0.93;
+      }else if(p.y<H*0.2){
+        p.vx+=(Math.random()-.5)*0.02;
+        p.vy+=(Math.random()-.5)*0.02;
+      }else p.y+=p.vy*dt*60;
+      p.x+=p.vx*dt*60; p.y+=p.vy*dt*60;
+      if(p.y<-30||p.x<-20||p.x>W+20){
+        Object.assign(p,spawn());
+      }
+    }
+  }
+  function draw(){
+    ctx.clearRect(0,0,W,H);
+    ctx.globalCompositeOperation='lighter';
+    for(const p of parts){
+      const tw=0.6+0.4*Math.sin(p.phase+T*params.twinkle);
+      const alpha=p.arrived?0.9*tw:0.6*tw;
+      const r=p.size*(p.arrived?1.4:1);
+      const grad=ctx.createRadialGradient(p.x,p.y,0,p.x,p.y,r*5);
+      grad.addColorStop(0,`hsla(${p.hue},100%,70%,${0.18*alpha*params.glow})`);
+      grad.addColorStop(1,`hsla(${p.hue},100%,50%,0)`);
+      ctx.fillStyle=grad;ctx.beginPath();ctx.arc(p.x,p.y,r*5,0,Math.PI*2);ctx.fill();
+      ctx.fillStyle=`hsla(${p.hue},100%,80%,${0.75*alpha})`;
+      ctx.beginPath();ctx.arc(p.x,p.y,r,0,Math.PI*2);ctx.fill();
+    }
+    ctx.globalCompositeOperation='source-over';
+  }
+  let last=performance.now();
+  function loop(now){
+    const dt=Math.min(0.05,(now-last)/1000);last=now;T+=dt;
+    update(dt);draw();
+    requestAnimationFrame(loop);
+  }
+  requestAnimationFrame(loop);
+})();
+</script>
+</body>
+</html>

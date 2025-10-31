@@ -1,0 +1,232 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<title>Galaxia del Amor (sin audio)</title>
+<style>
+  body,html{margin:0;height:100%;background:#000;overflow:hidden}
+  canvas{display:block}
+  /* Se removió el estilo del reproductor (.player, .progress, .time) */
+</style>
+</head>
+<body>
+  <canvas id="c"></canvas>
+  <!-- Se eliminó el contenedor del reproductor y el elemento <audio> -->
+
+  <script src="https://cdn.jsdelivr.net/npm/three@0.148.0/build/three.min.js"></script>
+  <script>
+    // --- Escena Three.js intacta ---
+    const canvas = document.getElementById("c");
+    const renderer = new THREE.WebGLRenderer({canvas: canvas, antialias: true});
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
+    renderer.setSize(innerWidth, innerHeight);
+
+    const scene = new THREE.Scene();
+    const camera = new THREE.PerspectiveCamera(60, innerWidth / innerHeight, 0.1, 5000);
+
+    let targetDist = 300, currentDist = 300, rotX = 0.2, rotY = 0;
+
+    const loader = new THREE.TextureLoader();
+    const nebulaTex = loader.load("https://raw.githubusercontent.com/mrdoob/three.js/dev/examples/textures/cube/space/px.jpg");
+    scene.background = nebulaTex;
+
+    (function makeStars(count = 2000, radius = 3000){
+      const geom = new THREE.BufferGeometry();
+      const positions = new Float32Array(count * 3);
+      for(let i=0;i<count;i++){
+        const r = radius * (0.3 + 0.7*Math.random());
+        const theta = Math.random() * Math.PI * 2;
+        const phi = Math.acos(2*Math.random() - 1);
+        positions[3*i+0] = r * Math.sin(phi) * Math.cos(theta);
+        positions[3*i+1] = r * Math.cos(phi);
+        positions[3*i+2] = r * Math.sin(phi) * Math.sin(theta);
+      }
+      geom.setAttribute("position", new THREE.BufferAttribute(positions, 3));
+      const points = new THREE.Points(geom, new THREE.PointsMaterial({size: 1.5, color: 0xffffff, depthWrite: false}));
+      scene.add(points);
+    })();
+
+    const coreMat = new THREE.MeshPhongMaterial({color: 0x111111, transparent: true, opacity: 0.6, shininess: 200});
+    const core = new THREE.Mesh(new THREE.SphereGeometry(40,64,64), coreMat);
+    scene.add(core);
+
+    function makeCenterTextTexture(txt){
+      const c = document.createElement("canvas");
+      c.width = 512; c.height = 512;
+      const g = c.getContext("2d");
+      g.clearRect(0,0,c.width,c.height);
+      g.font = "bold 80px Arial";
+      g.textAlign = "center";
+      g.textBaseline = "middle";
+      g.fillStyle = "#ff0033";
+      g.shadowColor = "#ff66aa";
+      g.shadowBlur = 50;
+      g.fillText(txt, c.width/2, c.height/2);
+      return new THREE.CanvasTexture(c);
+    }
+
+    const centerTex = makeCenterTextTexture("TU SONRISA ✨");
+    const centerMat = new THREE.SpriteMaterial({map: centerTex, transparent: true});
+    const centerSprite = new THREE.Sprite(centerMat);
+    centerSprite.scale.set(60,60,1);
+    centerSprite.position.set(0,0,0);
+    centerSprite.renderOrder = 999;
+    scene.add(centerSprite);
+
+    function makeGlow(sz=768, c1="255,160,0", c2="255,60,0"){
+      const c = document.createElement("canvas");
+      c.width = c.height = sz;
+      const g = c.getContext("2d");
+      const grad = g.createRadialGradient(sz/2, sz/2, 0.05*sz, sz/2, sz/2, 0.5*sz);
+      grad.addColorStop(0, `rgba(${c1},0.9)`);
+      grad.addColorStop(0.5, `rgba(${c2},0.5)`);
+      grad.addColorStop(1, "rgba(0,0,0,0)");
+      g.fillStyle = grad;
+      g.fillRect(0,0,sz,sz);
+      return new THREE.CanvasTexture(c);
+    }
+    const glow = new THREE.Sprite(new THREE.SpriteMaterial({map: makeGlow(), transparent: true, depthWrite: false}));
+    glow.scale.set(500,500,1);
+    scene.add(glow);
+
+    function ringTexture(sz=768){
+      const c = document.createElement("canvas");
+      c.width = c.height = sz;
+      const g = c.getContext("2d");
+      g.translate(sz/2, sz/2);
+      const inner = 0.34*sz, outer = 0.49*sz;
+      const rg = g.createRadialGradient(0,0,0.3*inner, 0,0,outer);
+      rg.addColorStop(0, "rgba(255,255,200,1)");
+      rg.addColorStop(0.3, "rgba(255,160,60,0.9)");
+      rg.addColorStop(0.65, "rgba(255,80,0,0.6)");
+      rg.addColorStop(1, "rgba(0,0,0,0)");
+      g.fillStyle = rg;
+      g.beginPath();
+      g.arc(0,0,outer,0,2*Math.PI);
+      g.arc(0,0,inner,0,2*Math.PI,true);
+      g.closePath();
+      g.fill();
+      return new THREE.CanvasTexture(c);
+    }
+
+    const ring1 = new THREE.Mesh(new THREE.RingGeometry(60,80,128), new THREE.MeshBasicMaterial({map: ringTexture(), transparent: true, side: THREE.DoubleSide}));
+    const ring2 = new THREE.Mesh(new THREE.RingGeometry(85,100,128), new THREE.MeshBasicMaterial({map: ringTexture(), transparent: true, side: THREE.DoubleSide, opacity: 0.6}));
+    ring1.rotation.x = ring2.rotation.x = Math.PI/2;
+    scene.add(ring1); scene.add(ring2);
+
+    const WORDS = [];
+    const baseWords = ["✨ Tu sonrisa","💫 Tu mirada","🌟 Tu cabello","🎶 Tu risa","👀 Tus ojos","💬 Tu voz","🌸 Tu estilo","🌈 Tu energía","🫶 Tu forma de ser","🌼 Tu ternura","🌺 Tu encanto","🧠 Tu inteligencia","🎨 Tu creatividad","🔥 Tu pasión","💎 Tu brillo","🌙 Tu calma","☀️ Tu vibra","🌊 Tu tranquilidad","🏵️ Tu delicadeza","💐 Tu presencia","🦋 Tu libertad","🍀 Tu buena suerte","😄 Tu alegría","🧡 Tu bondad","🗣️ Tu conversación","🤍 Tu paciencia","😂 Tu sentido del humor","🧲 Tu carisma","⚡ Tu espontaneidad","🍯 Tu dulzura","🤝 Tu amistad","🎯 Tus metas","🌠 Tus sueños","🏆 Tus logros","🚀 Tu determinación","🔆 Tu confianza","👗 Tu elegancia","🌧️ Tu sensibilidad","✨ Tu esencia","🔅 Tu luz","🪄 Tu magia","🕊️ Tu paz","🛡️ Tu fortaleza","😊 Tu simpatía","🎇 Tu chispa","🧩 Tu originalidad","📚 Tu sabiduría","🌺 Tu belleza"];
+    for(let i=0;i<6;i++) WORDS.push(...baseWords);
+
+    function makeTextTexture(txt, glowColor){
+      const c = document.createElement("canvas");
+      c.width = 512; c.height = 128;
+      const g = c.getContext("2d");
+      g.clearRect(0,0,c.width,c.height);
+      g.font = "bold 60px Arial";
+      g.textAlign = "center";
+      g.textBaseline = "middle";
+      g.fillStyle = "#fff";
+      g.shadowColor = glowColor;
+      g.shadowBlur = 30;
+      g.fillText(txt, c.width/2, c.height/2);
+      return new THREE.CanvasTexture(c);
+    }
+    const COLORS = ["#ff66ff","#66ccff","#ffd36b","#ff9966","#8df59a","#ffa0f8","#c6a7ff","#ff4444","#44ff99","#99ccff"];
+    const textGroup = new THREE.Group();
+    scene.add(textGroup);
+
+    for(let i=0;i<WORDS.length;i++){
+      const tex = makeTextTexture(WORDS[i], COLORS[i % COLORS.length]);
+      const mat = new THREE.SpriteMaterial({map: tex, transparent: true});
+      const sp = new THREE.Sprite(mat);
+      sp.scale.set(50,16,1);
+      const phi = Math.acos(2*Math.random() - 1);
+      const theta = Math.random() * Math.PI * 2;
+      const r = 150 + 120 * Math.random();
+      sp.position.set(r * Math.sin(phi) * Math.cos(theta),
+                      r * Math.cos(phi),
+                      r * Math.sin(phi) * Math.sin(theta));
+      sp.userData = {phi, theta, radius: r, speed: 0.001 + 0.001*Math.random()};
+      textGroup.add(sp);
+    }
+
+    let dragging = false, lastX = 0, lastY = 0;
+    function onDown(e){ dragging = true; const p = e.touches ? e.touches[0] : e; lastX = p.clientX; lastY = p.clientY; }
+    function onMove(e){
+      if(!dragging) return;
+      const p = e.touches ? e.touches[0] : e;
+      const dx = (p.clientX - lastX) / innerWidth;
+      const dy = (p.clientY - lastY) / innerHeight;
+      rotY -= 3 * dx;
+      rotX = Math.max(-1.2, Math.min(1.2, rotX - 2.2 * dy));
+      lastX = p.clientX; lastY = p.clientY;
+    }
+    function onUp(){ dragging = false; }
+
+    addEventListener("mousedown", onDown);
+    addEventListener("mousemove", onMove);
+    addEventListener("mouseup", onUp);
+    addEventListener("touchstart", onDown, {passive: true});
+    addEventListener("touchmove", onMove, {passive: true});
+    addEventListener("touchend", onUp, {passive: true});
+
+    addEventListener("wheel", (e)=>{
+      targetDist += 0.25 * e.deltaY;
+      targetDist = Math.max(160, Math.min(600, targetDist));
+    }, {passive: true});
+
+    let pinch = 0;
+    addEventListener("touchmove", (e)=>{
+      if(e.touches && e.touches.length === 2){
+        e.preventDefault();
+        const dx = e.touches[0].clientX - e.touches[1].clientX;
+        const dy = e.touches[0].clientY - e.touches[1].clientY;
+        const d = Math.hypot(dx, dy);
+        if(pinch){
+          targetDist += 0.5 * (pinch - d);
+          targetDist = Math.max(160, Math.min(600, targetDist));
+        }
+        pinch = d;
+      }
+    }, {passive: false});
+    addEventListener("touchend", ()=>{ pinch = 0; }, {passive: true});
+
+    let t = 0;
+    function tick(){
+      requestAnimationFrame(tick);
+      t += 0.01;
+
+      ring1.rotation.z += 0.002;
+      ring2.rotation.z -= 0.0015;
+      glow.scale.set(500*(1+0.03*Math.sin(0.4*t)), 500*(1+0.03*Math.sin(0.4*t)), 1);
+
+      const s = 1 + 0.05 * Math.sin(3*t);
+      core.scale.set(s,s,s);
+
+      textGroup.children.forEach(sp => {
+        sp.material.opacity = 0.8 + 0.2*Math.sin(2*t);
+        sp.userData.theta += sp.userData.speed;
+        sp.position.x = sp.userData.radius * Math.sin(sp.userData.phi) * Math.cos(sp.userData.theta);
+        sp.position.z = sp.userData.radius * Math.sin(sp.userData.phi) * Math.sin(sp.userData.theta);
+      });
+
+      currentDist += 0.06 * (targetDist - currentDist);
+      const cx = Math.cos(rotX), sx = Math.sin(rotX), cy = Math.cos(rotY), sy = Math.sin(rotY);
+      camera.position.set(currentDist * sy * cx, currentDist * sx, currentDist * cy * cx);
+      camera.lookAt(0,0,0);
+
+      renderer.render(scene, camera);
+    }
+    tick();
+
+    // Ajuste de tamaño al redimensionar
+    addEventListener("resize", ()=>{
+      renderer.setSize(innerWidth, innerHeight);
+      camera.aspect = innerWidth / innerHeight;
+      camera.updateProjectionMatrix();
+    });
+  </script>
+</body>
+</html>

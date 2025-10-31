@@ -1,0 +1,221 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Corazón con ondas</title>
+<style>
+  :root{
+    --bg: #000;
+    --neon: #ff3b7b;
+    --neon-2: #ffb3cc;
+    --ripple: rgba(255, 64, 128, .42);  /* rojo acuoso y transparente */
+    --beat: 1600ms;             /* ciclo del latido (dos picos: 20% y 60%) */
+    --rippleDur: 5200ms;        /* ondas lentas */
+    --xFade: 800ms;             /* crossfade de texto */
+  }
+
+  html, body { height: 100%; }
+  *{ box-sizing:border-box; margin:0; padding:0; }
+  body{
+    background: var(--bg);
+    color: #fff;
+    font-family: system-ui, -apple-system, Segoe UI, Roboto, Ubuntu, Cantarell, "Helvetica Neue", Arial, "Noto Sans";
+    overflow: hidden;
+  }
+
+  .stage{
+    position:relative; width:100vw; height:100vh;
+    display:grid; place-items:center;
+  }
+
+  .center{
+    position:relative; display:grid; place-items:center;
+    gap:18px; text-align:center; z-index:2; padding:20px;
+    /* Damos ancho propio para que el texto no herede el ancho del corazón */
+    min-width: min(90vw, 900px);
+  }
+
+  /* --- Texto neón con crossfade --- */
+  .neonWrap{
+    position: relative;
+    width: min(90vw, 900px);    /* suficiente para una línea en la mayoría de pantallas */
+    min-height: 1.4em;
+  }
+  .neon{
+    position:absolute; inset:0;
+    display:flex; align-items:center; justify-content:center;
+    font-size: clamp(20px, 3.5vw, 40px);
+    font-weight:700; letter-spacing:.5px;
+    white-space: nowrap;         /* ← no cortar en varias líneas */
+    text-shadow:
+      0 0 6px var(--neon),
+      0 0 14px var(--neon),
+      0 0 28px var(--neon-2),
+      0 0 48px var(--neon-2);
+    filter: drop-shadow(0 0 2px #fff1);
+    opacity: 0; transition: opacity var(--xFade) ease;
+  }
+  .neonA{ opacity: 1; }          /* visible al inicio */
+  .neonWrap.swap .neonA{ opacity: 0; }
+  .neonWrap.swap .neonB{ opacity: 1; }
+
+  /* --- Corazón con latido --- */
+  #centerHeart{
+    width: clamp(120px, 18vw, 220px);
+    height:auto;
+    transform-origin:center;
+    transform-box: fill-box;
+    animation: heartbeat var(--beat) ease-in-out infinite;
+    filter: drop-shadow(0 0 6px #ff2a6f) drop-shadow(0 0 16px #ff2a6f);
+  }
+  #centerHeart path.fill{ fill:#ff2a6f; }
+  #centerHeart path.glow{
+    fill:none; stroke:#ffd1e0; stroke-width:1.45; opacity:.85;
+    filter: drop-shadow(0 0 10px #ffd1e0);
+  }
+
+  /* Dos picos por ciclo (20% y 60%) */
+  @keyframes heartbeat{
+    0%,100%{ transform:scale(1); }
+    10%{ transform:scale(1.06); }
+    20%{ transform:scale(1.14); } /* 1er pico */
+    35%{ transform:scale(1.02); }
+    50%{ transform:scale(1.06); }
+    60%{ transform:scale(1.12); } /* 2º pico */
+    80%{ transform:scale(1.00); }
+  }
+
+  /* --- Escenario de ondas --- */
+  #rippleStage{
+    position:fixed; inset:0; width:100vw; height:100vh;
+    z-index:1; pointer-events:none;
+  }
+
+  .ripple{
+    fill:none;
+    stroke: var(--ripple);
+    stroke-width: 1.5;
+    opacity: .92;
+    transform-origin:center;
+    transform-box: fill-box;
+    filter: url(#waterSoft);
+    mix-blend-mode: screen;      /* brillo suave sobre el fondo */
+    animation: rippleHeart var(--rippleDur) ease-out forwards;
+  }
+
+  @keyframes rippleHeart{
+    0%{
+      transform: scale(0.32);
+      opacity: .9;
+      stroke-width: 1.9;
+    }
+    60%{
+      opacity: .55;
+      stroke-width: 1.35;
+    }
+    100%{
+      transform: scale(8.2);     /* cubre la pantalla lentamente */
+      opacity: 0;
+      stroke-width: 1.0;
+    }
+  }
+</style>
+</head>
+<body>
+  <div class="stage">
+    <div class="center">
+      <!-- Crossfade de textos -->
+      <div class="neonWrap" id="neonWrap">
+        <div class="neon neonA" id="textA">Como un latido ❤</div>
+        <div class="neon neonB" id="textB">Como un fuerte la latido 💗</div>
+      </div>
+
+      <!-- Corazón centrado -->
+      <svg id="centerHeart" viewBox="-100 -100 200 200" aria-hidden="true">
+        <path class="fill" d="M0,-35
+          C-28,-62 -75,-40 -75,0
+          C-75,32 -50,60 0,88
+          C50,60 75,32 75,0
+          C75,-40 28,-62 0,-35 Z"/>
+        <path class="glow" d="M0,-35
+          C-28,-62 -75,-40 -75,0
+          C-75,32 -50,60 0,88
+          C50,60 75,32 75,0
+          C75,-40 28,-62 0,-35 Z"/>
+      </svg>
+    </div>
+
+    <!-- Escenario de ondas -->
+    <svg id="rippleStage" viewBox="-100 -100 200 200" preserveAspectRatio="xMidYMid meet" aria-hidden="true">
+      <defs>
+        <!-- Path del corazón para reutilizar como onda -->
+        <path id="heartPath" d="M0,-35
+          C-28,-62 -75,-40 -75,0
+          C-75,32 -50,60 0,88
+          C50,60 75,32 75,0
+          C75,-40 28,-62 0,-35 Z"/>
+        <!-- Filtro suave acuoso -->
+        <filter id="waterSoft">
+          <feGaussianBlur stdDeviation="1.0" result="blur"/>
+          <feComponentTransfer>
+            <feFuncA type="linear" slope="1"/>
+          </feComponentTransfer>
+          <feMerge>
+            <feMergeNode in="blur"/>
+            <feMergeNode in="SourceGraphic"/>
+          </feMerge>
+        </filter>
+      </defs>
+      <!-- Aquí se inyectan <use class="ripple" href="#heartPath"> con JS -->
+    </svg>
+  </div>
+
+<script>
+  const heart     = document.getElementById('centerHeart');
+  const stage     = document.getElementById('rippleStage');
+  const neonWrap  = document.getElementById('neonWrap');
+
+  const WAIT_MS   = 3000; // cambio a 3s
+  let ripplesEnabled = false;
+
+  function getBeatMs(){
+    const v = getComputedStyle(document.documentElement).getPropertyValue('--beat').trim();
+    if (v.endsWith('ms')) return parseFloat(v);
+    if (v.endsWith('s'))  return parseFloat(v)*1000;
+    return 1600;
+  }
+
+  let cycleTimers = [];
+  function clearCycleTimers(){ cycleTimers.forEach(id => clearTimeout(id)); cycleTimers = []; }
+
+  function scheduleCycleRipples(){
+    if (!ripplesEnabled) return;
+    clearCycleTimers();
+    const beat = getBeatMs();
+    // Dos picos por ciclo: 20% y 60%
+    cycleTimers.push(setTimeout(spawnRipple, beat * 0.20));
+    cycleTimers.push(setTimeout(spawnRipple, beat * 0.60));
+  }
+
+  function spawnRipple(){
+    if (!ripplesEnabled) return;
+    const use = document.createElementNS('http://www.w3.org/2000/svg', 'use');
+    use.setAttribute('href', '#heartPath');
+    use.setAttribute('class', 'ripple');
+    use.addEventListener('animationend', () => use.remove());
+    stage.appendChild(use);
+  }
+
+  // Activa crossfade y ondas a los 6s
+  setTimeout(() => {
+    neonWrap.classList.add('swap');
+    ripplesEnabled = true;
+    scheduleCycleRipples();
+  }, WAIT_MS);
+
+  heart.addEventListener('animationiteration', scheduleCycleRipples);
+  heart.addEventListener('animationstart', scheduleCycleRipples);
+</script>
+</body>
+</html>

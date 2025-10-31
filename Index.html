@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Presentación • 9 HTML • Verificación</title>
+  <style>
+    :root{
+      --bg:#0b0b12; 
+      --fg:#e8e8f0; 
+      --muted:#9aa1ad; 
+      --accent:#7aa2ff; 
+      --transition: 900ms;
+    }
+    html,body{height:100%;}
+    body{margin:0;background:var(--bg);color:var(--fg);font-family:system-ui,-apple-system,Segoe UI,Roboto,Ubuntu,Inter,Arial;overflow:hidden}
+
+    /* Fondo con corazones reales */
+    .identity{position:fixed;inset:0;display:grid;place-items:center;z-index:50;overflow:hidden;background:#f6efe6;}
+    .identity .bg{position:absolute;inset:0;background:#f6efe6;z-index:0;}
+    .heart{position:absolute;width:20px;height:20px;background:pink;transform:rotate(45deg);animation:float 10s infinite ease-in;opacity:0.8;border-radius:4px;}
+    .heart:before,.heart:after{content:'';position:absolute;width:20px;height:20px;background:pink;border-radius:50%;}
+    .heart:before{top:-10px;left:0;}
+    .heart:after{left:-10px;top:0;}
+
+    @keyframes float{
+      0%{transform:translateY(100vh) rotate(45deg);opacity:0;}
+      10%{opacity:1;}
+      100%{transform:translateY(-10vh) rotate(45deg);opacity:0;}
+    }
+
+    .identity .panel{position:relative;z-index:2;max-width:740px;width:92%;text-align:center;padding:1.5rem;border-radius:1rem;background:rgba(255,255,255,.8);backdrop-filter:blur(8px);border:1px solid rgba(0,0,0,.08);color:#402a2a}
+    .identity h1{margin:.2rem 0 .5rem 0;font-size:1.75rem}
+    .identity p{margin:0 0 1rem 0;color:#6b4a4a}
+    .identity .actions{display:flex;justify-content:center;gap:.75rem}
+    .identity .btn{background:#ff8fb3;border-color:#e2789a;color:#fff;padding:.55rem 1rem;border-radius:.5rem;cursor:pointer;border:1px solid #e2789a}
+    .identity .btn.secondary{background:#fff;border-color:#e2c9c9;color:#6b4a4a}
+  </style>
+  <!-- Preload de la imagen para el estado "Acceso denegado" (evita el primer retraso) -->
+  <link rel="preload" as="image" href="https://i.ibb.co/zT05JWtH/images.jpg" />
+</head>
+<body>
+  <div class="identity" id="identity">
+    <div class="bg" aria-hidden="true"></div>
+    <div class="panel">
+      <h1>¿Eres Carla?</h1>
+      <p>Selecciona una opción para continuar.</p>
+      <div class="actions">
+        <button class="btn" id="yesCarla">Sí, soy Carla ❤️</button>
+        <button class="btn secondary" id="noCarla">No</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // URL de la imagen para "Acceso denegado" y pre-carga inmediata
+    const DENIED_IMG = 'https://i.ibb.co/zT05JWtH/images.jpg';
+    const deniedPreload = new Image();
+    deniedPreload.decoding = 'async';
+    deniedPreload.loading = 'eager';
+    deniedPreload.src = DENIED_IMG;
+
+    // Generar corazones flotantes
+    const bg = document.querySelector('.identity .bg');
+    for(let i=0;i<30;i++){
+      const h=document.createElement('div');
+      h.classList.add('heart');
+      h.style.left=Math.random()*100+'%';
+      h.style.animationDelay=Math.random()*5+'s';
+      h.style.animationDuration=(8+Math.random()*4)+'s';
+      h.style.opacity=Math.random();
+      bg.appendChild(h);
+    }
+
+    function showAccessDenied(){
+      document.body.innerHTML = `
+        <div style="position:fixed;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;background:#f6efe6;color:#5a4141;text-align:center;font-family:system-ui">
+          <h1 style="font-size:2rem;margin-bottom:1rem;">Acceso denegado</h1>
+          <img src="${DENIED_IMG}" alt="No es Carla" decoding="async" loading="eager" fetchpriority="high"
+               style="max-width:80vw;max-height:70vh;border-radius:1rem;box-shadow:0 10px 30px rgba(0,0,0,.3);object-fit:contain;">
+        </div>
+      `;
+    }
+
+    const yesCarla = document.getElementById('yesCarla');
+    const noCarla = document.getElementById('noCarla');
+
+    yesCarla.addEventListener('click', ()=>{
+      const identity = document.getElementById('identity');
+      identity.innerHTML = `
+        <div class="bg" aria-hidden="true"></div>
+        <div class="panel">
+          <h1>¡Gracias, Carla! ❤️</h1>
+          <p>Preparando la presentación…</p>
+        </div>
+      `;
+      setTimeout(()=>{
+        window.location.href = 'presentacion.html';
+      },5000);
+    });
+
+    noCarla.addEventListener('click', ()=>{
+      const identity = document.getElementById('identity');
+      identity.innerHTML = `
+        <div style="position:fixed;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;background:#f6efe6;color:#5a4141;text-align:center;font-family:system-ui">
+          <h1 style="font-size:2rem;margin-bottom:1rem;">Acceso denegado</h1>
+          <img src="${DENIED_IMG}" alt="No es Carla" decoding="async" loading="eager" fetchpriority="high" style="max-width:80vw;max-height:70vh;border-radius:1rem;box-shadow:0 10px 30px rgba(0,0,0,.3);object-fit:contain;">
+        </div>`;
+    });
+  </script>
+</body>
+</html>
