@@ -19,7 +19,7 @@
 
   const rand = (min, max) => min + Math.random() * (max - min);
   const pick = (list) => list[Math.floor(Math.random() * list.length)];
-  const snoopyDurations = { sky: 12000, blocks: 12000, gardenJewels: 13000, cinemaSpace: 12000, sea: 12000, sweetMusic: 12000, painting: 12000, portal: 13000 };
+  const snoopyDurations = { sky: 14000, blocks: 14000, gardenJewels: 15000, cinemaSpace: 14000, sea: 14000, sweetMusic: 14000, painting: 14000, portal: 17000 };
   const snoopyAsset = new Image();
   let snoopyAssetReady = false;
   let snoopySprite = null;
@@ -814,7 +814,7 @@
 
   function snoopyWorldProgress(t) {
     if (!sceneStartedAt) return 0;
-    const duration = snoopyDurations[scene] || 12000;
+    const duration = snoopyDurations[scene] || 14000;
     const raw = Math.max(0, Math.min(1, ((running ? t - sceneStartedAt : sceneElapsedBeforePause) || 0) / duration));
     const eased = raw * raw * (3 - 2 * raw);
     return eased;
