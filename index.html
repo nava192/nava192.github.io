@@ -1,112 +1,185 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="es">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Presentación • 9 HTML • Verificación</title>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Para Osiris</title>
   <style>
-    :root{
-      --bg:#0b0b12; 
-      --fg:#e8e8f0; 
-      --muted:#9aa1ad; 
-      --accent:#7aa2ff; 
-      --transition: 900ms;
+    * { box-sizing: border-box; }
+    html, body { height: 100%; margin: 0; }
+    body {
+      overflow: hidden;
+      color: #fffaf0;
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Arial, sans-serif;
+      background: #04060d;
     }
-    html,body{height:100%;}
-    body{margin:0;background:var(--bg);color:var(--fg);font-family:system-ui,-apple-system,Segoe UI,Roboto,Ubuntu,Inter,Arial;overflow:hidden}
-
-    /* Fondo con corazones reales */
-    .identity{position:fixed;inset:0;display:grid;place-items:center;z-index:50;overflow:hidden;background:#f6efe6;}
-    .identity .bg{position:absolute;inset:0;background:#f6efe6;z-index:0;}
-    .heart{position:absolute;width:20px;height:20px;background:pink;transform:rotate(45deg);animation:float 10s infinite ease-in;opacity:0.8;border-radius:4px;}
-    .heart:before,.heart:after{content:'';position:absolute;width:20px;height:20px;background:pink;border-radius:50%;}
-    .heart:before{top:-10px;left:0;}
-    .heart:after{left:-10px;top:0;}
-
-    @keyframes float{
-      0%{transform:translateY(100vh) rotate(45deg);opacity:0;}
-      10%{opacity:1;}
-      100%{transform:translateY(-10vh) rotate(45deg);opacity:0;}
+    main {
+      position: fixed;
+      inset: 0;
+      display: grid;
+      align-items: center;
+      padding: clamp(1.2rem, 5vw, 5rem);
+      isolation: isolate;
+      background:
+        radial-gradient(circle at 18% 20%, rgba(255, 211, 107, 0.26), transparent 30%),
+        radial-gradient(circle at 78% 25%, rgba(255, 122, 168, 0.22), transparent 32%),
+        radial-gradient(circle at 62% 80%, rgba(142, 232, 255, 0.18), transparent 34%),
+        linear-gradient(145deg, #070b17, #120914 48%, #07160f);
     }
-
-    .identity .panel{position:relative;z-index:2;max-width:740px;width:92%;text-align:center;padding:1.5rem;border-radius:1rem;background:rgba(255,255,255,.8);backdrop-filter:blur(8px);border:1px solid rgba(0,0,0,.08);color:#402a2a}
-    .identity h1{margin:.2rem 0 .5rem 0;font-size:1.75rem}
-    .identity p{margin:0 0 1rem 0;color:#6b4a4a}
-    .identity .actions{display:flex;justify-content:center;gap:.75rem}
-    .identity .btn{background:#ff8fb3;border-color:#e2789a;color:#fff;padding:.55rem 1rem;border-radius:.5rem;cursor:pointer;border:1px solid #e2789a}
-    .identity .btn.secondary{background:#fff;border-color:#e2c9c9;color:#6b4a4a}
+    main::before {
+      content: "";
+      position: absolute;
+      inset: -12%;
+      z-index: -1;
+      background-image:
+        linear-gradient(90deg, rgba(255,255,255,.18) 1px, transparent 1px),
+        linear-gradient(rgba(255,255,255,.14) 1px, transparent 1px);
+      background-size: 58px 58px;
+      opacity: .08;
+      transform: rotate(-8deg);
+    }
+    main::after {
+      content: "";
+      position: absolute;
+      inset: 0;
+      z-index: -1;
+      background:
+        radial-gradient(circle at 55% 52%, transparent 0 34%, rgba(0,0,0,.34) 72%),
+        linear-gradient(90deg, rgba(0,0,0,.56), transparent 46%, rgba(0,0,0,.32));
+    }
+    .stars {
+      position: absolute;
+      inset: 0;
+      overflow: hidden;
+      z-index: -1;
+    }
+    .stars i {
+      position: absolute;
+      width: 2px;
+      height: 2px;
+      border-radius: 50%;
+      background: #fff;
+      box-shadow: 0 0 16px rgba(255,255,255,.9);
+      animation: floatStar linear infinite;
+    }
+    @keyframes floatStar {
+      from { transform: translate3d(0, 110vh, 0); opacity: 0; }
+      12% { opacity: 1; }
+      to { transform: translate3d(var(--x), -14vh, 0); opacity: 0; }
+    }
+    .content {
+      width: min(850px, 100%);
+    }
+    .eyebrow {
+      margin: 0 0 1rem;
+      color: #ffd36b;
+      font-weight: 850;
+      text-transform: uppercase;
+      letter-spacing: 0;
+      text-shadow: 0 0 22px rgba(255,211,107,.42);
+    }
+    h1 {
+      margin: 0;
+      font-size: clamp(3rem, 8vw, 7rem);
+      line-height: .98;
+      letter-spacing: 0;
+      text-wrap: balance;
+      text-shadow:
+        0 0 2px rgba(255,255,255,.85),
+        0 0 34px rgba(142,232,255,.24),
+        0 30px 80px rgba(0,0,0,.65);
+    }
+    p {
+      width: min(640px, 100%);
+      margin: 1.25rem 0 1.8rem;
+      color: #dde5f4;
+      font-size: clamp(1rem, 1.6vw, 1.22rem);
+      line-height: 1.6;
+    }
+    .actions {
+      display: flex;
+      gap: .8rem;
+      flex-wrap: wrap;
+    }
+    .btn {
+      appearance: none;
+      border: 1px solid rgba(255,211,107,.7);
+      border-radius: 999px;
+      min-height: 48px;
+      min-width: 176px;
+      padding: .8rem 1.25rem;
+      color: #1b1308;
+      background: linear-gradient(135deg, #ffe08a, #ffb86b);
+      font-weight: 900;
+      cursor: pointer;
+      box-shadow: 0 16px 38px rgba(255,184,107,.24);
+    }
+    .btn.secondary {
+      color: #fffaf0;
+      background: rgba(255,255,255,.08);
+      border-color: rgba(255,255,255,.24);
+      box-shadow: none;
+      backdrop-filter: blur(12px);
+    }
+    .flower-orbit {
+      position: absolute;
+      right: clamp(-4rem, 7vw, 7rem);
+      bottom: clamp(3rem, 8vh, 8rem);
+      width: clamp(220px, 30vw, 420px);
+      aspect-ratio: 1;
+      border-radius: 50%;
+      border: 1px solid rgba(255,255,255,.14);
+      box-shadow: inset 0 0 60px rgba(255,255,255,.06), 0 0 80px rgba(255,122,168,.16);
+      animation: spin 24s linear infinite;
+    }
+    .flower-orbit span {
+      position: absolute;
+      left: 50%;
+      top: 50%;
+      font-size: clamp(1.8rem, 4vw, 3.2rem);
+      transform: rotate(var(--a)) translateX(clamp(92px, 14vw, 192px)) rotate(calc(var(--a) * -1));
+      filter: drop-shadow(0 0 18px rgba(255,255,255,.35));
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    @media (max-width: 720px) {
+      main { align-items: start; padding-top: 5rem; }
+      .actions { display: grid; }
+      .flower-orbit { opacity: .42; right: -7rem; bottom: 2rem; }
+    }
   </style>
-  <!-- Preload de la imagen para el estado "Acceso denegado" (evita el primer retraso) -->
-  <link rel="preload" as="image" href="https://i.ibb.co/zT05JWtH/images.jpg" />
 </head>
 <body>
-  <div class="identity" id="identity">
-    <div class="bg" aria-hidden="true"></div>
-    <div class="panel">
-      <h1>¿Eres Carla?</h1>
-      <p>Selecciona una opción para continuar.</p>
-      <div class="actions">
-        <button class="btn" id="yesCarla">Sí, soy Carla ❤️</button>
-        <button class="btn secondary" id="noCarla">No</button>
-      </div>
+  <main>
+    <div class="stars" id="stars" aria-hidden="true"></div>
+    <div class="flower-orbit" aria-hidden="true">
+      <span style="--a:0deg">&#x1F337;</span>
+      <span style="--a:72deg">&#x1F338;</span>
+      <span style="--a:144deg">&#x1F33C;</span>
+      <span style="--a:216deg">&#x1F339;</span>
+      <span style="--a:288deg">&#x273F;</span>
     </div>
-  </div>
-
+    <section class="content" aria-label="Felicitaci&oacute;n para Osiris">
+      <p class="eyebrow">Felicitaci&oacute;n especial</p>
+      <h1>Para Osiris.</h1>
+      <p>Un peque&ntilde;o recorrido hecho para celebrar tu t&iacute;tulo: cielo, flores, m&uacute;sica, juegos, mar, pintura, dulzura, espacio y un cierre donde todo termina mirando hacia tu sonrisa.</p>
+      <div class="actions">
+        <button class="btn" id="start" type="button">Abrir felicitaci&oacute;n</button>
+      </div>
+    </section>
+  </main>
   <script>
-    // URL de la imagen para "Acceso denegado" y pre-carga inmediata
-    const DENIED_IMG = 'Img/images.jpg';
-    const deniedPreload = new Image();
-    deniedPreload.decoding = 'async';
-    deniedPreload.loading = 'eager';
-    deniedPreload.src = DENIED_IMG;
-
-    // Generar corazones flotantes
-    const bg = document.querySelector('.identity .bg');
-    for(let i=0;i<30;i++){
-      const h=document.createElement('div');
-      h.classList.add('heart');
-      h.style.left=Math.random()*100+'%';
-      h.style.animationDelay=Math.random()*5+'s';
-      h.style.animationDuration=(8+Math.random()*4)+'s';
-      h.style.opacity=Math.random();
-      bg.appendChild(h);
+    const stars = document.getElementById("stars");
+    for (let i = 0; i < 90; i++) {
+      const star = document.createElement("i");
+      star.style.left = Math.random() * 100 + "%";
+      star.style.top = Math.random() * 100 + "%";
+      star.style.setProperty("--x", (Math.random() * 140 - 70).toFixed(1) + "px");
+      star.style.animationDuration = (8 + Math.random() * 12).toFixed(2) + "s";
+      star.style.animationDelay = (-Math.random() * 16).toFixed(2) + "s";
+      star.style.opacity = (0.35 + Math.random() * 0.65).toFixed(2);
+      stars.appendChild(star);
     }
-
-    function showAccessDenied(){
-      document.body.innerHTML = `
-        <div style="position:fixed;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;background:#f6efe6;color:#5a4141;text-align:center;font-family:system-ui">
-          <h1 style="font-size:2rem;margin-bottom:1rem;">Acceso denegado</h1>
-          <img src="${DENIED_IMG}" alt="No es Carla" decoding="async" loading="eager" fetchpriority="high"
-               style="max-width:80vw;max-height:70vh;border-radius:1rem;box-shadow:0 10px 30px rgba(0,0,0,.3);object-fit:contain;">
-        </div>
-      `;
-    }
-
-    const yesCarla = document.getElementById('yesCarla');
-    const noCarla = document.getElementById('noCarla');
-
-    yesCarla.addEventListener('click', ()=>{
-      const identity = document.getElementById('identity');
-      identity.innerHTML = `
-        <div class="bg" aria-hidden="true"></div>
-        <div class="panel">
-          <h1>¡Gracias, Carla! ❤️</h1>
-          <p>Preparando la presentación…</p>
-        </div>
-      `;
-      setTimeout(()=>{
-        window.location.href = 'presentacion.html';
-      },5000);
-    });
-
-    noCarla.addEventListener('click', ()=>{
-      const identity = document.getElementById('identity');
-      identity.innerHTML = `
-        <div style="position:fixed;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;background:#f6efe6;color:#5a4141;text-align:center;font-family:system-ui">
-          <h1 style="font-size:2rem;margin-bottom:1rem;">Acceso denegado</h1>
-          <img src="${DENIED_IMG}" alt="No es Carla" decoding="async" loading="eager" fetchpriority="high" style="max-width:80vw;max-height:70vh;border-radius:1rem;box-shadow:0 10px 30px rgba(0,0,0,.3);object-fit:contain;">
-        </div>`;
-    });
+    document.getElementById("start").addEventListener("click", () => location.href = "presentacion.html");
   </script>
 </body>
 </html>

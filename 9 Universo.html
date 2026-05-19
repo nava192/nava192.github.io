@@ -26,6 +26,8 @@
     const camera = new THREE.PerspectiveCamera(60, innerWidth / innerHeight, 0.1, 5000);
 
     let targetDist = 300, currentDist = 300, rotX = 0.2, rotY = 0;
+    let running = new URLSearchParams(location.search).get("preload") !== "1";
+    let rafId = 0;
 
     const loader = new THREE.TextureLoader();
     const nebulaTex = loader.load("https://raw.githubusercontent.com/mrdoob/three.js/dev/examples/textures/cube/space/px.jpg");
@@ -194,8 +196,7 @@
     addEventListener("touchend", ()=>{ pinch = 0; }, {passive: true});
 
     let t = 0;
-    function tick(){
-      requestAnimationFrame(tick);
+    function renderFrame(){
       t += 0.01;
 
       ring1.rotation.z += 0.002;
@@ -219,7 +220,32 @@
 
       renderer.render(scene, camera);
     }
-    tick();
+    function tick(){
+      if(!running){
+        rafId = 0;
+        return;
+      }
+      renderFrame();
+      rafId = requestAnimationFrame(tick);
+    }
+    function startLoop(){
+      running = true;
+      if(!rafId) rafId = requestAnimationFrame(tick);
+    }
+    function pauseLoop(){
+      running = false;
+      if(rafId){
+        cancelAnimationFrame(rafId);
+        rafId = 0;
+      }
+    }
+    addEventListener("message", (event)=>{
+      if(!event.data || event.data.type !== "scene-control") return;
+      if(event.data.action === "pause") pauseLoop();
+      if(event.data.action === "resume") startLoop();
+    });
+    if(running) startLoop();
+    else renderFrame();
 
     // Ajuste de tamaño al redimensionar
     addEventListener("resize", ()=>{

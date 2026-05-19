@@ -1,271 +1,433 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="es">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Presentación • 9 HTML</title>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="preconnect" href="https://cdn.jsdelivr.net">
+  <link rel="dns-prefetch" href="https://cdn.jsdelivr.net">
+  <link rel="prefetch" href="https://cdn.jsdelivr.net/npm/three@0.148.0/build/three.min.js" as="script">
+  <title>Felicitaci&oacute;n para Osiris</title>
   <style>
-    :root{
-      --bg:#0b0b12; 
-      --fg:#e8e8f0; 
-      --muted:#9aa1ad; 
-      --accent:#7aa2ff; 
-      --transition: 900ms; /* duración del efecto de transición */
+    * { box-sizing: border-box; }
+    :root {
+      --fg: #fffaf0;
+      --muted: #aeb8c9;
+      --line: rgba(255,255,255,.2);
+      --panel: rgba(5,7,13,.66);
+      --transition: 880ms;
     }
-    html,body{height:100%;}
-    body{margin:0;background:var(--bg);color:var(--fg);font-family:system-ui,-apple-system,Segoe UI,Roboto,Ubuntu,Inter,Arial;overflow:hidden}
-
-    /* Contenedor principal */
-    .stage{position:fixed;inset:0;display:grid;place-items:center;background:#000}
-
-    /* Dos capas para cruzar (crossfade/slide) entre iframes */
-    .layer{position:absolute;inset:0;display:block}
-    .layer iframe{position:absolute;inset:0;width:100%;height:100%;border:0;background:#000}
-
-    /* Estados base (visibilidad) */
-    .hidden{opacity:0;pointer-events:none}
-    .visible{opacity:1}
-    .layer{transition:opacity var(--transition) ease;}
-
-    /* Transiciones extra (slide y zoom) aplicadas al iframe entrante/saliente */
-    .anim-enter{animation-duration: var(--transition); animation-fill-mode: both;}
-    .anim-exit{ animation-duration: var(--transition); animation-fill-mode: both;}
-
-    @keyframes slideLeftIn{from{transform:translateX(12%)}to{transform:translateX(0)}}
-    @keyframes slideLeftOut{from{transform:translateX(0)}to{transform:translateX(-12%)}}
-
-    @keyframes slideUpIn{from{transform:translateY(12%)}to{transform:translateY(0)}}
-    @keyframes slideUpOut{from{transform:translateY(0)}to{transform:translateY(-12%)}}
-
-    @keyframes zoomIn{from{transform:scale(1.05)}to{transform:scale(1)}}
-    @keyframes zoomOut{from{transform:scale(1)}to{transform:scale(0.96)}}
-
-    /* UI */
-    .hud{position:fixed;left:0;right:0;bottom:0;display:flex;gap:.5rem;align-items:center;padding:.75rem 1rem;background:linear-gradient(to top, rgba(0,0,0,.55), transparent)}
-    .btn{appearance:none; border:1px solid #2b2f3a; background:#121420; color:var(--fg); padding:.55rem .8rem; border-radius:.7rem; cursor:pointer; font-weight:600}
-    .btn:hover{border-color:#3b4252}
-    .btn[aria-pressed="true"]{background:#1b1f2d;border-color:#4c566a}
-    .sep{flex:1}
-    .time{font-variant-numeric:tabular-nums; color:var(--muted); font-size:.9rem}
-
-    /* Barra de progreso */
-    .progress{position:fixed;left:0;right:0;bottom:0;height:3px;background:rgba(255,255,255,.15)}
-    .progress>i{display:block;height:100%;width:0;background:linear-gradient(90deg,var(--accent),#a6e3ff)}
-
-    /* Overlay inicial para habilitar audio/autoplay */
-    .gate{position:fixed;inset:0;display:grid;place-items:center;background:radial-gradient(1200px 800px at 50% 120%, #0a0f1c, #04060a); color:#cfd7ff}
-    .gate .card{max-width:680px;padding:1.25rem 1.5rem;border-radius:1rem;background:rgba(0,0,0,.35);backdrop-filter: blur(8px);border:1px solid rgba(255,255,255,.08);text-align:center}
-    .gate h1{margin:.2rem 0 0 0;font-size:1.25rem}
-    .gate p{margin:.35rem 0 1rem 0;color:#9fb2ff}
-    .gate .actions{display:flex;gap:.75rem;justify-content:center}
-    .gate .actions .btn{font-size:1rem}
+    html, body { height: 100%; margin: 0; }
+    body {
+      overflow: hidden;
+      background: #000;
+      color: var(--fg);
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Arial, sans-serif;
+    }
+    .stage {
+      position: fixed;
+      inset: 0;
+      background: #000;
+      overflow: hidden;
+    }
+    .layer,
+    .layer iframe {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      border: 0;
+      background: #000;
+    }
+    .layer {
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity var(--transition) ease;
+    }
+    .layer.visible {
+      opacity: 1;
+      pointer-events: auto;
+    }
+    .anim-enter,
+    .anim-exit {
+      animation-duration: var(--transition);
+      animation-fill-mode: both;
+      animation-timing-function: cubic-bezier(.2,.72,.2,1);
+    }
+    @keyframes fadeIn { from { opacity: .2; transform: scale(1.025); } to { opacity: 1; transform: scale(1); } }
+    @keyframes fadeOut { from { opacity: 1; transform: scale(1); } to { opacity: .2; transform: scale(.985); } }
+    @keyframes riseIn { from { transform: translateY(7%); opacity: .24; } to { transform: translateY(0); opacity: 1; } }
+    @keyframes riseOut { from { transform: translateY(0); opacity: 1; } to { transform: translateY(-5%); opacity: .24; } }
+    @keyframes sweepIn { from { transform: translateX(8%) scale(1.02); opacity: .24; } to { transform: translateX(0) scale(1); opacity: 1; } }
+    @keyframes sweepOut { from { transform: translateX(0) scale(1); opacity: 1; } to { transform: translateX(-8%) scale(.99); opacity: .24; } }
+    @keyframes nearIn { from { transform: scale(1.08); filter: blur(5px); opacity: .18; } to { transform: scale(1); filter: blur(0); opacity: 1; } }
+    @keyframes nearOut { from { transform: scale(1); filter: blur(0); opacity: 1; } to { transform: scale(.94); filter: blur(5px); opacity: .18; } }
+    .hud {
+      position: fixed;
+      z-index: 30;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      display: flex;
+      align-items: center;
+      gap: .55rem;
+      padding: .78rem clamp(.8rem, 3vw, 1.35rem);
+      background: linear-gradient(to top, rgba(0,0,0,.78), transparent);
+    }
+    .btn {
+      appearance: none;
+      min-height: 42px;
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      color: var(--fg);
+      background: var(--panel);
+      padding: .58rem .9rem;
+      font-weight: 820;
+      cursor: pointer;
+      backdrop-filter: blur(14px);
+    }
+    .btn:hover { border-color: rgba(255,255,255,.42); }
+    .btn[aria-pressed="true"] {
+      border-color: rgba(255,211,107,.75);
+      color: #ffe08a;
+    }
+    .sep { flex: 1; }
+    .time {
+      color: var(--muted);
+      font-size: .92rem;
+      font-variant-numeric: tabular-nums;
+      white-space: nowrap;
+      text-shadow: 0 2px 12px #000;
+    }
+    .progress {
+      position: fixed;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      z-index: 31;
+      height: 3px;
+      background: rgba(255,255,255,.14);
+    }
+    .progress i {
+      display: block;
+      height: 100%;
+      width: 0;
+      background: linear-gradient(90deg, #ffd36b, #8ee8ff, #ff7aa8);
+      box-shadow: 0 0 18px rgba(142,232,255,.68);
+    }
+    .gate {
+      position: fixed;
+      inset: 0;
+      z-index: 40;
+      display: grid;
+      align-items: center;
+      padding: clamp(1.2rem, 5vw, 5rem);
+      background:
+        radial-gradient(circle at 22% 20%, rgba(255,211,107,.24), transparent 30%),
+        radial-gradient(circle at 76% 78%, rgba(255,122,168,.2), transparent 34%),
+        linear-gradient(145deg, #070a14, #130911 48%, #06130e);
+    }
+    .gate.hidden {
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 520ms ease;
+    }
+    .gate-inner {
+      width: min(760px, 100%);
+    }
+    .gate h1 {
+      margin: 0;
+      font-size: clamp(2.6rem, 7vw, 5.4rem);
+      line-height: 1.02;
+      letter-spacing: 0;
+      text-wrap: balance;
+    }
+    .gate p {
+      width: min(620px, 100%);
+      margin: 1.1rem 0 1.4rem;
+      color: #dde5f4;
+      font-size: 1.08rem;
+      line-height: 1.6;
+    }
+    .gate .btn.primary {
+      color: #1b1308;
+      background: linear-gradient(135deg, #ffe08a, #ffb86b);
+      border-color: rgba(255,211,107,.74);
+      box-shadow: 0 16px 38px rgba(255,184,107,.22);
+    }
+    @media (max-width: 760px) {
+      .hud {
+        gap: .42rem;
+        flex-wrap: wrap;
+        padding-bottom: .95rem;
+      }
+      .btn {
+        min-height: 40px;
+        padding: .55rem .68rem;
+      }
+      .time {
+        width: 100%;
+        order: 4;
+      }
+    }
   </style>
 </head>
 <body>
-  <!-- AUDIO de fondo -->
-  <audio id="bgm" playsinline src="https://www.dropbox.com/scl/fi/fi4jwiiphm9j6rk4kqwvs/Marvin-Gaye-Tammi-Terrell-Ain-t-No-Mountain-High-Enough-Sub.-Espa-ol.mp3?rlkey=d9vs9gmpe2y3pf3ha5hw6bstp&st=jbzm8o9q&raw=1
-" preload="auto" loop></audio>
+  <audio id="bgm" playsinline preload="auto" loop src="https://www.dropbox.com/scl/fi/fi4jwiiphm9j6rk4kqwvs/Marvin-Gaye-Tammi-Terrell-Ain-t-No-Mountain-High-Enough-Sub.-Espa-ol.mp3?rlkey=d9vs9gmpe2y3pf3ha5hw6bstp&st=jbzm8o9q&raw=1"></audio>
 
-  <!-- Escenario con dos capas para transición entre iframes -->
-  <div class="stage" id="stage">
-    <div class="layer visible" id="layerA"><iframe id="frameA" referrerpolicy="no-referrer"></iframe></div>
-    <div class="layer hidden"  id="layerB"><iframe id="frameB" referrerpolicy="no-referrer"></iframe></div>
-  </div>
+  <main class="stage" id="stage">
+    <div class="layer visible" id="layerA"><iframe id="frameA" title="Escena actual"></iframe></div>
+    <div class="layer" id="layerB"><iframe id="frameB" title="Escena siguiente"></iframe></div>
+  </main>
 
-  <!-- HUD de controles -->
-  <div class="hud">
-    <button class="btn" id="prev">⟵ Anterior</button>
-    <button class="btn" id="next">Siguiente ⟶</button>
-    <button class="btn" id="playPause" aria-pressed="true">Pausa</button>
-    <button class="btn" id="mute" aria-pressed="false">🔊</button>
+  <div class="hud" aria-label="Controles de la presentaci&oacute;n">
+    <button class="btn" id="prev" type="button">Anterior</button>
+    <button class="btn" id="next" type="button">Siguiente</button>
+    <button class="btn" id="playPause" type="button" aria-pressed="true">Pausa</button>
+    <button class="btn" id="mute" type="button" aria-pressed="false">Sonido</button>
     <div class="sep"></div>
-    <div class="time"><span id="idx">1</span>/<span id="total">9</span> • <span id="remaining">–</span></div>
+    <div class="time"><span id="idx">1</span>/<span id="total">9</span> &middot; <span id="remaining">--</span></div>
   </div>
   <div class="progress"><i id="bar"></i></div>
 
-  <!-- Overlay de inicio -->
-  <div class="gate" id="gate">
-    <div class="card">
-      <h1>Presentación lista</h1>
-      <p>Presiona <strong>Iniciar</strong> para activar el audio y comenzar el pase automático.</p>
-      <div class="actions">
-        <button class="btn" id="start">▶️ Iniciar</button>
-        <button class="btn" id="startMuted">▶️ Iniciar sin sonido</button>
-      </div>
+  <section class="gate" id="gate" aria-label="Inicio">
+    <div class="gate-inner">
+      <h1>Un universo peque&ntilde;o para celebrar tu t&iacute;tulo.</h1>
+      <p>Una felicitaci&oacute;n para Osiris, hecha con cielo, flores, juegos, pel&iacute;culas, mar, m&uacute;sica, pintura, dulzura y un final guardado alrededor de tu sonrisa.</p>
+      <button class="btn primary" id="start" type="button">Iniciar</button>
+      <button class="btn" id="startMuted" type="button">Iniciar sin sonido</button>
     </div>
-  </div>
+  </section>
 
   <script>
-    // 1) Configura aquí tus 9 archivos, duración (ms) y el tipo de transición
     const SLIDES = [
-      { src: "1 Esa Mujer.html", duration: 7000, transition: "fade" },
-      { src: "2 Flor.html", duration: 7000, transition: "slide-left" },
-      { src: "3 Petalos.html", duration: 6500, transition: "zoom" },
-      { src: "4 Tierra.html", duration: 6000, transition: "slide-up" },
-      { src: "5 Manzana.html", duration: 7000, transition: "fade" },
-      { src: "6 Latido.html", duration: 6000, transition: "slide-left" },
-      { src: "7 Cometa.html", duration: 7000, transition: "zoom" },
-      { src: "8 escena_maravilloso_sentimiento_v6.html", duration: 7000, transition: "slide-up" },
-      { src: "9 Universo.html", duration: 10000, transition: "fade" },
+      { src: "1 Cielo de Felicitacion.html", duration: 9000, transition: "fade" },
+      { src: "2 Aldea de Bloques.html", duration: 9000, transition: "rise" },
+      { src: "3 Campo de Flores.html", duration: 9500, transition: "sweep" },
+      { src: "4 Historias y Estrellas.html", duration: 9000, transition: "near" },
+      { src: "5 Mar y Atardecer.html", duration: 9000, transition: "fade" },
+      { src: "6 Musica y Postres.html", duration: 9000, transition: "rise" },
+      { src: "7 Pintura y Escuela.html", duration: 9000, transition: "sweep" },
+      { src: "8 Puente al Universo.html", duration: 9500, transition: "near" },
+      { src: "9 Universo.html", duration: 15000, transition: "fade" }
     ];
 
-    // 2) Opciones
-    const LOOP = false;               // repetir al finalizar
-    const AUTOPLAY = true;            // auto-avance entre slides
-    const START_MUTED = false;        // ajusta si se elige "Iniciar sin sonido"
-    const INIT_AUTOSTART = false;     // 🔹 evita que comience sin preguntar
+    const prefersQuiet = new URLSearchParams(location.search).get("sound") === "0";
+    const TRANSITION_MS = 880;
+    let current = 0;
+    let active = "A";
+    let playing = true;
+    let muted = prefersQuiet;
+    let timer = null;
+    let raf = 0;
+    let slideStartedAt = 0;
+    let remainingMs = SLIDES[0].duration;
+    const audio = document.getElementById("bgm");
 
-    // Elementos
-    const layerA = document.getElementById('layerA');
-    const layerB = document.getElementById('layerB');
-    const frameA = document.getElementById('frameA');
-    const frameB = document.getElementById('frameB');
-    const bgm = document.getElementById('bgm');
-    const startBtn = document.getElementById('start');
-    const startMutedBtn = document.getElementById('startMuted');
-    const gate = document.getElementById('gate');
-    const btnPrev = document.getElementById('prev');
-    const btnNext = document.getElementById('next');
-    const btnPP  = document.getElementById('playPause');
-    const btnMute= document.getElementById('mute');
-    const idxEl  = document.getElementById('idx');
-    const totalEl= document.getElementById('total');
-    const remEl  = document.getElementById('remaining');
-    const barEl  = document.getElementById('bar');
+    const layerA = document.getElementById("layerA");
+    const layerB = document.getElementById("layerB");
+    const frameA = document.getElementById("frameA");
+    const frameB = document.getElementById("frameB");
+    const idxEl = document.getElementById("idx");
+    const totalEl = document.getElementById("total");
+    const remainingEl = document.getElementById("remaining");
+    const bar = document.getElementById("bar");
+    const playPause = document.getElementById("playPause");
+    const mute = document.getElementById("mute");
+    const gate = document.getElementById("gate");
 
     totalEl.textContent = SLIDES.length;
+    assignFrame(frameA, 0, true);
+    assignFrame(frameB, 1, true);
+    updateHud();
 
-    let current = 0;
-    let playing = true;
-    let muted = false;
-    let timer = null;
-    let progressRAF = null;
-    let tStart = 0;
+    function slideSrc(index, preload) {
+      const src = SLIDES[index].src;
+      const separator = src.includes("?") ? "&" : "?";
+      return `${src}${separator}preload=${preload ? "1" : "0"}`;
+    }
 
-    function setTransitionClasses(iframe, mode, type){
-      iframe.className = "";
-      const map = {
-        'slide-left': ['slideLeftIn','slideLeftOut'],
-        'slide-up':   ['slideUpIn','slideUpOut'],
-        'zoom':       ['zoomIn','zoomOut'],
+    function sendSceneControl(frame, action) {
+      try {
+        frame.contentWindow?.postMessage({ type: "scene-control", action }, "*");
+      } catch (error) {}
+    }
+
+    function assignFrame(frame, index, preload) {
+      if (index < 0 || index >= SLIDES.length) {
+        frame.removeAttribute("src");
+        frame.dataset.index = "";
+        frame.dataset.preload = "";
+        return;
+      }
+      frame.dataset.index = String(index);
+      frame.dataset.preload = preload ? "1" : "0";
+      frame.onload = () => {
+        const activeFrame = active === "A" ? frameA : frameB;
+        const presentationStarted = gate.classList.contains("hidden");
+        const shouldPause = preload && (frame !== activeFrame || !presentationStarted);
+        sendSceneControl(frame, shouldPause ? "pause" : "resume");
       };
-      if(type === 'fade' || !map[type]) return;
-      const [inName, outName] = map[type];
-      if(mode==='enter') iframe.style.animationName = inName;
-      if(mode==='exit')  iframe.style.animationName = outName;
+      frame.src = slideSrc(index, preload);
     }
 
-    function loadInto(layer, iframe, slide){
-      setTransitionClasses(iframe, 'enter', slide.transition);
-      iframe.src = slide.src;
+    function preloadNext() {
+      const nextIndex = current + 1;
+      const inactiveFrame = active === "A" ? frameB : frameA;
+      if (nextIndex >= SLIDES.length) {
+        sendSceneControl(inactiveFrame, "pause");
+        return;
+      }
+      if (inactiveFrame.dataset.index !== String(nextIndex) || inactiveFrame.dataset.preload !== "1") {
+        assignFrame(inactiveFrame, nextIndex, true);
+      } else {
+        sendSceneControl(inactiveFrame, "pause");
+      }
     }
 
-    function crossTo(nextIndex){
-      const currLayer = (layerA.classList.contains('visible')) ? layerA : layerB;
-      const nextLayer = (currLayer === layerA) ? layerB : layerA;
-      const currFrame = currLayer.querySelector('iframe');
-      const nextFrame = nextLayer.querySelector('iframe');
+    function resumeActiveScene() {
+      sendSceneControl(active === "A" ? frameA : frameB, "resume");
+    }
 
-      const nextSlide = SLIDES[nextIndex];
-      setTransitionClasses(currFrame, 'exit', SLIDES[current].transition);
-      loadInto(nextLayer, nextFrame, nextSlide);
+    function pauseActiveScene() {
+      sendSceneControl(active === "A" ? frameA : frameB, "pause");
+    }
 
-      nextLayer.classList.remove('hidden');
-      nextLayer.classList.add('visible');
-      currLayer.classList.remove('visible');
-      currLayer.classList.add('hidden');
+    function setMuted(value) {
+      muted = value;
+      mute.textContent = muted ? "Silencio" : "Sonido";
+      mute.setAttribute("aria-pressed", String(!muted));
+      audio.muted = muted;
+      audio.volume = muted ? 0 : 0.78;
+    }
 
+    function setTransition(outFrame, inFrame, type) {
+      const names = {
+        fade: ["fadeOut", "fadeIn"],
+        rise: ["riseOut", "riseIn"],
+        sweep: ["sweepOut", "sweepIn"],
+        near: ["nearOut", "nearIn"]
+      }[type] || ["fadeOut", "fadeIn"];
+      outFrame.className = "anim-exit";
+      inFrame.className = "anim-enter";
+      outFrame.style.animationName = names[0];
+      inFrame.style.animationName = names[1];
+      setTimeout(() => {
+        outFrame.className = "";
+        inFrame.className = "";
+        outFrame.style.animationName = "";
+        inFrame.style.animationName = "";
+      }, TRANSITION_MS + 60);
+    }
+
+    function showSlide(nextIndex, manual = false) {
+      if (nextIndex === current && !manual) return;
+      const outgoingLayer = active === "A" ? layerA : layerB;
+      const incomingLayer = active === "A" ? layerB : layerA;
+      const outgoingFrame = active === "A" ? frameA : frameB;
+      const incomingFrame = active === "A" ? frameB : frameA;
+      if (incomingFrame.dataset.index !== String(nextIndex)) {
+        assignFrame(incomingFrame, nextIndex, false);
+      } else {
+        incomingFrame.dataset.preload = "0";
+        sendSceneControl(incomingFrame, "resume");
+      }
+      sendSceneControl(outgoingFrame, "pause");
+      setTransition(outgoingFrame, incomingFrame, SLIDES[nextIndex].transition);
+      incomingLayer.classList.add("visible");
+      outgoingLayer.classList.remove("visible");
+      active = active === "A" ? "B" : "A";
       current = nextIndex;
-      idxEl.textContent = (current+1);
-      restartProgress();
+      remainingMs = SLIDES[current].duration;
+      slideStartedAt = performance.now();
+      updateHud();
+      schedule();
+      setTimeout(preloadNext, TRANSITION_MS + 90);
     }
 
-    function restartProgress(){
-      if(timer) clearTimeout(timer);
-      if(progressRAF) cancelAnimationFrame(progressRAF);
-      barEl.style.width = '0px';
-      tStart = performance.now();
+    function next() {
+      if (current >= SLIDES.length - 1) {
+        playing = false;
+        updateHud();
+        return;
+      }
+      showSlide(current + 1);
+    }
 
-      const dur = SLIDES[current].duration;
-      function tick(now){
-        const el = Math.min(1, (now - tStart)/dur);
-        barEl.style.width = (el*100)+'%';
-        const left = Math.max(0, Math.ceil((dur - (now - tStart))/1000));
-        remEl.textContent = left + ' s';
-        if(el < 1 && playing){
-          progressRAF = requestAnimationFrame(tick);
+    function previous() {
+      showSlide(Math.max(0, current - 1), true);
+    }
+
+    function schedule() {
+      clearTimeout(timer);
+      cancelAnimationFrame(raf);
+      if (!playing) return;
+      slideStartedAt = performance.now();
+      timer = setTimeout(next, remainingMs);
+      tick();
+    }
+
+    function tick() {
+      const elapsed = performance.now() - slideStartedAt;
+      const duration = SLIDES[current].duration;
+      const progress = Math.min(1, elapsed / duration);
+      bar.style.width = (progress * 100).toFixed(2) + "%";
+      remainingEl.textContent = Math.max(0, Math.ceil((duration - elapsed) / 1000)) + "s";
+      if (playing) raf = requestAnimationFrame(tick);
+    }
+
+    function updateHud() {
+      idxEl.textContent = current + 1;
+      playPause.textContent = playing ? "Pausa" : "Continuar";
+      playPause.setAttribute("aria-pressed", String(playing));
+      setMuted(muted);
+    }
+
+    async function begin(forceMuted) {
+      setMuted(forceMuted);
+      if (!muted) {
+        try {
+          await audio.play();
+        } catch (error) {
+          setMuted(true);
         }
       }
-      progressRAF = requestAnimationFrame(tick);
-
-      if(playing && AUTOPLAY){
-        timer = setTimeout(()=>{
-          goNext();
-        }, dur);
-      }
+      if (document.activeElement instanceof HTMLElement) document.activeElement.blur();
+      gate.classList.add("hidden");
+      gate.setAttribute("aria-hidden", "true");
+      playing = true;
+      remainingMs = SLIDES[current].duration;
+      resumeActiveScene();
+      preloadNext();
+      schedule();
+      updateHud();
     }
 
-    function goNext(){
-      const nextIndex = (current + 1 < SLIDES.length) ? current + 1 : (LOOP ? 0 : current);
-      if(nextIndex === current && !LOOP) return;
-      crossTo(nextIndex);
-    }
-    function goPrev(){
-      const prevIndex = (current - 1 >= 0) ? current - 1 : (LOOP ? SLIDES.length - 1 : 0);
-      crossTo(prevIndex);
-    }
-
-    btnNext.addEventListener('click', ()=>{ playing=false; btnPP.setAttribute('aria-pressed','false'); goNext(); });
-    btnPrev.addEventListener('click', ()=>{ playing=false; btnPP.setAttribute('aria-pressed','false'); goPrev(); });
-
-    btnPP.addEventListener('click', ()=>{
+    document.getElementById("next").addEventListener("click", () => showSlide(Math.min(SLIDES.length - 1, current + 1), true));
+    document.getElementById("prev").addEventListener("click", previous);
+    playPause.addEventListener("click", () => {
       playing = !playing;
-      btnPP.textContent = playing ? 'Pausa' : 'Reanudar';
-      btnPP.setAttribute('aria-pressed', String(playing));
-      restartProgress();
-    });
-
-    btnMute.addEventListener('click', ()=>{
-      muted = !muted; bgm.muted = muted;
-      btnMute.textContent = muted ? '🔇' : '🔊';
-      btnMute.setAttribute('aria-pressed', String(muted));
-    });
-
-    window.addEventListener('keydown', (e)=>{
-      if(e.key==='ArrowRight') { playing=false; btnPP.setAttribute('aria-pressed','false'); goNext(); }
-      if(e.key==='ArrowLeft')  { playing=false; btnPP.setAttribute('aria-pressed','false'); goPrev(); }
-      if(e.key===' ') { e.preventDefault(); btnPP.click(); }
-      if(e.key==='m' || e.key==='M') { btnMute.click(); }
-    });
-
-    function boot(){
-      frameA.src = SLIDES[0].src;
-      idxEl.textContent = 1;
-      restartProgress();
-    }
-
-    async function startPresentation({mute=false}={}){
-      try{ 
-        bgm.muted = mute; 
-        await bgm.play(); 
-      } catch(err){ 
-        try { bgm.muted = true; await bgm.play(); } catch(e){}
+      if (playing) {
+        resumeActiveScene();
+        schedule();
+      } else {
+        clearTimeout(timer);
+        cancelAnimationFrame(raf);
+        pauseActiveScene();
+        remainingMs = Math.max(500, SLIDES[current].duration - (performance.now() - slideStartedAt));
       }
-      muted = bgm.muted; 
-      btnMute.textContent = muted ? '🔇' : '🔊';
-      gate.remove();
-      boot();
-    }
-
-    startBtn.addEventListener('click', ()=> startPresentation({mute:false}));
-    startMutedBtn.addEventListener('click', ()=> startPresentation({mute:true}));
-
-    // 🔹 Solo iniciar automáticamente si se activa manualmente
-    if (INIT_AUTOSTART) {
-      setTimeout(() => {
-        startPresentation({ mute: true });
-      }, 400);
-    }
+      updateHud();
+    });
+    mute.addEventListener("click", () => setMuted(!muted));
+    document.getElementById("start").addEventListener("click", () => begin(prefersQuiet));
+    document.getElementById("startMuted").addEventListener("click", () => begin(true));
+    addEventListener("pagehide", () => {
+      audio.pause();
+      audio.currentTime = 0;
+    });
+    addEventListener("beforeunload", () => {
+      audio.pause();
+      audio.currentTime = 0;
+    });
   </script>
 </body>
 </html>
