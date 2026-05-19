@@ -16,7 +16,7 @@
       --panel: rgba(5,7,13,.66);
       --transition: 880ms;
     }
-    html, body { height: 100%; margin: 0; }
+    html, body { width: 100%; height: 100%; min-height: 100svh; margin: 0; overflow: hidden; }
     body {
       overflow: hidden;
       background: #000;
@@ -26,6 +26,7 @@
     .stage {
       position: fixed;
       inset: 0;
+      min-height: 100svh;
       background: #000;
       overflow: hidden;
     }
@@ -70,7 +71,7 @@
       display: flex;
       align-items: center;
       gap: .55rem;
-      padding: .78rem clamp(.8rem, 3vw, 1.35rem);
+      padding: .78rem max(clamp(.8rem, 3vw, 1.35rem), env(safe-area-inset-right)) max(.78rem, env(safe-area-inset-bottom)) max(clamp(.8rem, 3vw, 1.35rem), env(safe-area-inset-left));
       background: linear-gradient(to top, rgba(0,0,0,.78), transparent);
     }
     .btn {
@@ -120,11 +121,25 @@
       z-index: 40;
       display: grid;
       align-items: center;
-      padding: clamp(1.2rem, 5vw, 5rem);
+      padding: max(clamp(1.2rem, 5vw, 5rem), env(safe-area-inset-top)) max(clamp(1.2rem, 5vw, 5rem), env(safe-area-inset-right)) max(clamp(1.2rem, 5vw, 5rem), env(safe-area-inset-bottom)) max(clamp(1.2rem, 5vw, 5rem), env(safe-area-inset-left));
+      overflow: hidden;
       background:
         radial-gradient(circle at 22% 20%, rgba(255,211,107,.24), transparent 30%),
         radial-gradient(circle at 76% 78%, rgba(255,122,168,.2), transparent 34%),
         linear-gradient(145deg, #070a14, #130911 48%, #06130e);
+    }
+    html::-webkit-scrollbar,
+    body::-webkit-scrollbar,
+    .stage::-webkit-scrollbar,
+    .gate::-webkit-scrollbar {
+      display: none;
+    }
+    html,
+    body,
+    .stage,
+    .gate {
+      scrollbar-width: none;
+      -ms-overflow-style: none;
     }
     .gate.hidden {
       opacity: 0;
@@ -136,7 +151,7 @@
     }
     .gate h1 {
       margin: 0;
-      font-size: clamp(2.6rem, 7vw, 5.4rem);
+      font-size: clamp(2.2rem, 7vw, 5.4rem);
       line-height: 1.02;
       letter-spacing: 0;
       text-wrap: balance;
@@ -157,16 +172,85 @@
     @media (max-width: 760px) {
       .hud {
         gap: .42rem;
-        flex-wrap: wrap;
-        padding-bottom: .95rem;
+        display: grid;
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+        padding: .58rem max(.55rem, env(safe-area-inset-right)) max(.72rem, env(safe-area-inset-bottom)) max(.55rem, env(safe-area-inset-left));
       }
       .btn {
         min-height: 40px;
-        padding: .55rem .68rem;
+        min-width: 0;
+        padding: .5rem .38rem;
+        font-size: clamp(.72rem, 3.2vw, .9rem);
+        white-space: nowrap;
       }
+      .sep { display: none; }
       .time {
         width: 100%;
-        order: 4;
+        grid-column: 1 / -1;
+        order: 0;
+        font-size: .82rem;
+        text-align: center;
+      }
+      .gate {
+        align-items: start;
+        padding-top: max(2.2rem, env(safe-area-inset-top));
+        padding-inline: max(1rem, env(safe-area-inset-left)) max(1rem, env(safe-area-inset-right));
+        padding-bottom: max(2rem, env(safe-area-inset-bottom));
+        overflow: auto;
+      }
+      .gate h1 {
+        font-size: clamp(2rem, 10.5vw, 3.5rem);
+      }
+      .gate p {
+        margin: .9rem 0 1.05rem;
+        font-size: clamp(.94rem, 4vw, 1.02rem);
+        line-height: 1.46;
+      }
+      .gate .btn {
+        width: 100%;
+        margin-top: .45rem;
+        padding: .72rem .85rem;
+      }
+    }
+    @media (max-width: 380px) {
+      .hud {
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+      }
+      .btn {
+        min-height: 36px;
+        padding-inline: .2rem;
+        font-size: clamp(.62rem, 3vw, .72rem);
+      }
+    }
+    @media (max-height: 560px) and (max-width: 760px) {
+      .hud {
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+        padding-top: .42rem;
+      }
+      .btn {
+        min-height: 34px;
+        font-size: .72rem;
+      }
+      .time {
+        display: none;
+      }
+      .gate {
+        padding-top: max(.85rem, env(safe-area-inset-top));
+      }
+      .gate h1 {
+        font-size: clamp(1.55rem, 8vw, 2.4rem);
+      }
+      .gate p {
+        margin: .65rem 0 .75rem;
+        font-size: .88rem;
+        line-height: 1.34;
+      }
+    }
+    @supports (height: 100dvh) {
+      html,
+      body,
+      .stage {
+        min-height: 100dvh;
       }
     }
   </style>

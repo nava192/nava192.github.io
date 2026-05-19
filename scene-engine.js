@@ -16,6 +16,8 @@
   let sceneStartedAt = running ? performance.now() : 0;
   let sceneElapsedBeforePause = 0;
   let rafId = 0;
+  const viewWidth = () => Math.max(1, Math.floor(window.visualViewport?.width || innerWidth));
+  const viewHeight = () => Math.max(1, Math.floor(window.visualViewport?.height || innerHeight));
 
   const rand = (min, max) => min + Math.random() * (max - min);
   const pick = (list) => list[Math.floor(Math.random() * list.length)];
@@ -32,8 +34,8 @@
   snoopyAsset.src = "assets/snoopy-casita-sprite-transparent.png?v=1";
 
   function resize() {
-    W = innerWidth;
-    H = innerHeight;
+    W = viewWidth();
+    H = viewHeight();
     pointer.x = pointer.tx = W * .5;
     pointer.y = pointer.ty = H * .5;
     canvas.width = Math.floor(W * DPR);
@@ -2512,6 +2514,7 @@
   }
 
   addEventListener("resize", resize);
+  window.visualViewport?.addEventListener("resize", resize);
   addEventListener("pointermove", (event) => {
     pointer.tx = event.clientX;
     pointer.ty = event.clientY;

@@ -5,8 +5,12 @@
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
 <title>Galaxia del Amor (sin audio)</title>
 <style>
-  body,html{margin:0;height:100%;background:#000;overflow:hidden}
-  canvas{display:block}
+  body,html{margin:0;height:100%;min-height:100svh;background:#000;overflow:hidden}
+  canvas{display:block;width:100%;height:100svh;touch-action:none}
+  @supports (height: 100dvh){
+    body,html{min-height:100dvh}
+    canvas{height:100dvh}
+  }
   /* Se removió el estilo del reproductor (.player, .progress, .time) */
 </style>
 </head>
@@ -18,14 +22,23 @@
   <script>
     // --- Escena Three.js intacta ---
     const canvas = document.getElementById("c");
+    const viewWidth = () => Math.max(1, Math.floor(window.visualViewport?.width || innerWidth));
+    const viewHeight = () => Math.max(1, Math.floor(window.visualViewport?.height || innerHeight));
+    const isPhone = () => Math.min(viewWidth(), viewHeight()) < 520 || viewWidth() < 760;
+    const centerTextScale = () => isPhone() ? 46 : 60;
+    const wordTextScale = () => isPhone() ? { w: 34, h: 11 } : { w: 50, h: 16 };
+    const minCameraDistance = () => isPhone() ? 260 : 160;
+    const maxCameraDistance = () => isPhone() ? 760 : 600;
+    const initialCameraDistance = () => isPhone() ? 430 : 300;
+    const orbitRadius = () => isPhone() ? 120 + 95 * Math.random() : 150 + 120 * Math.random();
     const renderer = new THREE.WebGLRenderer({canvas: canvas, antialias: true});
     renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
-    renderer.setSize(innerWidth, innerHeight);
+    renderer.setSize(viewWidth(), viewHeight(), false);
 
     const scene = new THREE.Scene();
-    const camera = new THREE.PerspectiveCamera(60, innerWidth / innerHeight, 0.1, 5000);
+    const camera = new THREE.PerspectiveCamera(isPhone() ? 68 : 60, viewWidth() / viewHeight(), 0.1, 5000);
 
-    let targetDist = 300, currentDist = 300, rotX = 0.2, rotY = 0;
+    let targetDist = initialCameraDistance(), currentDist = targetDist, rotX = 0.2, rotY = 0;
     let running = new URLSearchParams(location.search).get("preload") !== "1";
     let rafId = 0;
 
@@ -71,7 +84,7 @@
     const centerTex = makeCenterTextTexture("TU SONRISA ✨");
     const centerMat = new THREE.SpriteMaterial({map: centerTex, transparent: true});
     const centerSprite = new THREE.Sprite(centerMat);
-    centerSprite.scale.set(60,60,1);
+    centerSprite.scale.set(centerTextScale(), centerTextScale(), 1);
     centerSprite.position.set(0,0,0);
     centerSprite.renderOrder = 999;
     scene.add(centerSprite);
@@ -143,10 +156,11 @@
       const tex = makeTextTexture(WORDS[i], COLORS[i % COLORS.length]);
       const mat = new THREE.SpriteMaterial({map: tex, transparent: true});
       const sp = new THREE.Sprite(mat);
-      sp.scale.set(50,16,1);
+      const scale = wordTextScale();
+      sp.scale.set(scale.w, scale.h, 1);
       const phi = Math.acos(2*Math.random() - 1);
       const theta = Math.random() * Math.PI * 2;
-      const r = 150 + 120 * Math.random();
+      const r = orbitRadius();
       sp.position.set(r * Math.sin(phi) * Math.cos(theta),
                       r * Math.cos(phi),
                       r * Math.sin(phi) * Math.sin(theta));
@@ -176,7 +190,7 @@
 
     addEventListener("wheel", (e)=>{
       targetDist += 0.25 * e.deltaY;
-      targetDist = Math.max(160, Math.min(600, targetDist));
+      targetDist = Math.max(minCameraDistance(), Math.min(maxCameraDistance(), targetDist));
     }, {passive: true});
 
     let pinch = 0;
@@ -188,7 +202,7 @@
         const d = Math.hypot(dx, dy);
         if(pinch){
           targetDist += 0.5 * (pinch - d);
-          targetDist = Math.max(160, Math.min(600, targetDist));
+          targetDist = Math.max(minCameraDistance(), Math.min(maxCameraDistance(), targetDist));
         }
         pinch = d;
       }
@@ -247,12 +261,27 @@
     if(running) startLoop();
     else renderFrame();
 
-    // Ajuste de tamaño al redimensionar
-    addEventListener("resize", ()=>{
-      renderer.setSize(innerWidth, innerHeight);
-      camera.aspect = innerWidth / innerHeight;
+    function applyResponsiveLayout(){
+      const w = viewWidth();
+      const h = viewHeight();
+      renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
+      renderer.setSize(w, h, false);
+      camera.aspect = w / h;
+      camera.fov = isPhone() ? 68 : 60;
       camera.updateProjectionMatrix();
-    });
+      targetDist = Math.max(minCameraDistance(), Math.min(maxCameraDistance(), targetDist));
+      currentDist = Math.max(minCameraDistance(), Math.min(maxCameraDistance(), currentDist));
+      const centerScale = centerTextScale();
+      centerSprite.scale.set(centerScale, centerScale, 1);
+      const scale = wordTextScale();
+      textGroup.children.forEach(sp => sp.scale.set(scale.w, scale.h, 1));
+      renderFrame();
+    }
+
+    // Ajuste de tamaño al redimensionar
+    addEventListener("resize", applyResponsiveLayout);
+    window.visualViewport?.addEventListener("resize", applyResponsiveLayout);
+    applyResponsiveLayout();
   </script>
 </body>
 </html>
